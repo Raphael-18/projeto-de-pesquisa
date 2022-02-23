@@ -24,11 +24,11 @@ def StoreFromDb(user, database, bacia):
             user = user,
             database = database
         )
-        print("Conexão estabelecida!\n")
+        # print("Conexão estabelecida!\n")
 
         cursor = connection.cursor()
         # Query
-        cursor.execute("SELECT * FROM " + bacia)
+        cursor.execute("SELECT * FROM " + bacia + " WHERE Id BETWEEN 944 AND 1309")
 
         # Vetores para armazenar dados lidos
         E = []
@@ -42,9 +42,10 @@ def StoreFromDb(user, database, bacia):
 
         # Objeto tipo 'Dado'
         dados = Dado(P = P, EP = E, Qobs = Q)
+        return dados
 
-        for i in range(len(dados.P)):
-            print('%.3f \t %.3f \t %.3f' % (dados.P[i], dados.EP[i], dados.Qobs[i]))
+        # for i in range(len(dados.P)):
+        #     print('%.3f \t %.3f \t %.3f' % (dados.P[i], dados.EP[i], dados.Qobs[i]))
 
     except mysql.connector.Error as err:
         if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
@@ -56,7 +57,7 @@ def StoreFromDb(user, database, bacia):
 
     finally:
         connection.close()
-        print("\nConexão fechada")
+        # print("Conexão fechada")
 
 
 StoreFromDb("test", "Bacias", "Biritiba")

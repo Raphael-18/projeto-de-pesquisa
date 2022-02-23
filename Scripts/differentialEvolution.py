@@ -1,3 +1,4 @@
+from dbConnection import *
 from scipy.optimize import differential_evolution
 import numpy as np
 
@@ -6,8 +7,8 @@ import numpy as np
 # ou vazao (observada)
 class Dado:
     def __init__(self, P, EP, Qobs):
-        self.P    = P
-        self.EP   = EP
+        self.P = P
+        self.EP = EP
         self.Qobs = Qobs
 
 
@@ -20,11 +21,12 @@ def Ler(arquivo):
 
 
 # Inicializacao de objeto 'Calibrar' tipo Dado
-Calibrar = Dado(Ler("Dados/P.txt"), Ler("Dados/EP.txt"), Ler("Dados/Q.txt"))
+# Calibrar = Dado(Ler("Dados/P.txt"), Ler("Dados/EP.txt"), Ler("Dados/Q.txt"))
+Calibrar = StoreFromDb("test", "Bacias", "Paraitinga")
 
 def SMAP(Str, k2t, Crec, Dados):
     # Input
-    n, AD = len(Dados.P), 109.08
+    n, AD = len(Dados.P), 182.24
 
     # Inicializacao
     TUin, EBin = 0.0, min(Dados.Qobs) * 0.95
@@ -34,8 +36,8 @@ def SMAP(Str, k2t, Crec, Dados):
 
     # Reservatorios em t = 0
     RSolo = TUin * Str
-    RSup  = 0.0
-    RSub  = EBin / (1 - (0.5 ** (1 / kkt))) / AD * 86.4
+    RSup = 0.0
+    RSub = EBin / (1 - (0.5 ** (1 / kkt))) / AD * 86.4
 
     for i in range(n):
         # Teor de umidade
@@ -84,11 +86,14 @@ def objective(p):
 
     Q = SMAP(Str, k2t, Crec, Calibrar)
 
-    sum = 0
-    for i in range(len(Q)):
-        sum += ((Calibrar.Qobs[i] - Q[i]) / Calibrar.Qobs[i]) ** 2
+    a = 0
+    b = 0
+    Qm = np.mean(Calibrar.Qobs)
+    for i in range(len(Calibrar.Qobs)):
+        a += (Calibrar.Qobs[i] - Q[i]) ** 2
+        b += (Calibrar.Qobs[i] - Qm) ** 2
 
-    return sum
+    return a / b
 
 
 # Bounds on the search
@@ -122,7 +127,7 @@ def NSE(Qobs, Q):
 
 print('Nash-Sutcliffe: %.3f' % NSE(Calibrar.Qobs, Qcalc))
 
-print()
-print('Qcalc \t Qobs')
-for j in range(len(Qcalc)):
-    print('%.3f \t %.3f' % (Qcalc[j], Calibrar.Qobs[j]))
+# print()
+# print('Qcalc \t Qobs')
+# for j in range(len(Qcalc)):
+#     print('%.3f \t %.3f' % (Qcalc[j], Calibrar.Qobs[j]))
