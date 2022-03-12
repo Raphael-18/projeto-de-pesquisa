@@ -98,7 +98,7 @@ print('Avaliações realizadas: %d' % result1['nfev'])
 
 # Solucao
 solution2 = result2['x']
-evaluation2 = objective2(solution1)
+evaluation2 = objective2(solution2)
 print('Solução: f([%.3f \t %.3f \t %.3f]) = %.3f' % (solution2[0], solution2[1], solution2[2], evaluation2))
 
 Qcalc = SMAP(solution2[0], solution2[1], solution2[2], Previsao, Atibaia)
