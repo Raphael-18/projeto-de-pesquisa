@@ -1,11 +1,21 @@
+# Parametros de calibracao:
+#   Str : capacidade de saturacao (mm)
+#   k2t : constante de recessao para o escoamento superficial (dias)
+#   Crec: recarga subterranea (%)
 def SMAP(Str, k2t, Crec, Dados, Bacia):
     # Input
+    # AD: area de drenagem (km2)
     n, AD = len(Dados.P), Bacia.AD
 
     # Inicializacao
+    # TU: teor de umidade
+    # EB: escoamento basico
     TUin, EBin = 0.0, Bacia.EB
     Q = []
 
+    # Ai  : abstracao inicial (mm)
+    # Capc: capacidade de campo (%)
+    # kkt : constante de recessao para o escoamento basico (dias)
     Ai, Capc, kkt = Bacia.Ai, Bacia.Capc, Bacia.kkt
 
     # Reservatorios em t = 0

@@ -1,6 +1,6 @@
 import mysql.connector
 from mysql.connector import errorcode
-from Classes import *
+from Dados.Classes import *
 
 
 # Banco de dados (user = test, db = Bacias):
@@ -8,6 +8,7 @@ from Classes import *
 #    |_ Bacia (Atibaia ou Valinhos)
 #    |_ Dia
 #    |_ Chuva
+#    |_ Vazao
 #    |_ Tipo (Calibracao ou Previsao)
 def Store(user, database, bacia, tipo):
     try:
@@ -20,6 +21,7 @@ def Store(user, database, bacia, tipo):
         # Query
         if tipo == 'Calibração':
             cursor.execute("SELECT * FROM WRF WHERE Bacia = '" + bacia + "' AND Tipo = '" + tipo + "'")
+        # Query de previsao retorna chuvas para as duas primeiras semanas de janeiro de 2021
         else:
             cursor.execute("SELECT * FROM WRF WHERE Bacia = '" + bacia + "' AND Dia BETWEEN '2021-01-01' AND '2021-01-14'")
 

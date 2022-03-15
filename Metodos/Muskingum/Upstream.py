@@ -1,9 +1,12 @@
+# previous: solucoes obtidas durante iteracao anterior
+# current : solucoes obtidas durante iteracao atual
 def TesteDeConvergencia(previous, current):
     # Diferencas; criterio: ser menor ou igual a 0.001
     # Importante: se o hidrograma de jusante conter valores nulos
     # (o que de fato ocorrera em alguns casos dado o projeto), checar
     # e simplesmente continuar
     for i in range(1, len(previous)):
+        # Check de nulidade deve vir primeiro
         if previous[i] == 0 or abs((current[i] - previous[i]) / current[i]) <= 0.001:
             continue
         else:
@@ -12,7 +15,9 @@ def TesteDeConvergencia(previous, current):
     return True
 
 
-def Muskingum(downstream, K, x):
+# O routing de jusante para montante
+# recebe um hidrograma de jusante (downstream)
+def UpstreamRouting(downstream, K, x):
     # Iteracao
     k = 1
     # Estimativa inicial

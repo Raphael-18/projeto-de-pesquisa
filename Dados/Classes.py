@@ -9,11 +9,11 @@ class Dado:
     EP = 2.4
 
 # Classe para instanciar as sub-bacias de Atibaia e Valinhos
-# com valores de Capc (capacidade de campo) e kkt (constante
+# com valores de AD (area de drenagem), Capc (capacidade de campo) e kkt (constante
 # de recessao para o escoamento basico). A abstracao inicial Ai
 # sera adotada como 2.5 mm para ambas.
 # Por conveniência ao calibrar e aplicar o modelo SMAP, os escoamentos
-# basicos iniciais foram pre-calculados e serao passados aos objetos
+# basicos iniciais EB foram pre-calculados e serao passados aos objetos
 # (7.5899 para Atibaia e 11.1456 para Valinhos)
 class Bacia:
     def __init__(self, AD, Capc, EB, kkt):

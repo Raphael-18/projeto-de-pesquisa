@@ -1,5 +1,5 @@
 from Dados.Conexao import *
-from Metodos.Muskingum import *
+from Metodos.Muskingum.Upstream import *
 from Metodos.SMAP import *
 from scipy.optimize import differential_evolution
 import numpy as np
@@ -59,7 +59,7 @@ for i in range(len(Qcalc)):
 # Muskingum para Atibaia
 # K = 3.5 dias (de Valinhos para Atibaia)
 # X = 0.3 (fator de amortecimento geral)
-pAtibaia = Muskingum(deficit, 3.5, 0.3)
+pAtibaia = UpstreamRouting(deficit, 3.5, 0.3)
 
 # Logica de conexao e busca de dados (banco)
 Calibracao = Store("test", "Bacias", "Atibaia", "Calibração")
@@ -132,8 +132,8 @@ for i in range(len(pReservatorios)):
 # Muskingum para Atibainha
 # K = 4.9 dias (de Atibaia para Atibainha)
 # X = 0.3 (fator de amortecimento geral)
-pAtibainha = Muskingum(pReservatorios, 4.9, 0.3)
+pAtibainha = UpstreamRouting(pReservatorios, 4.9, 0.3)
 # Muskingum para Cachoeira
 # K = 2.6 dias (de Atibaia para Cachoeira)
 # X = 0.3 (fator de amortecimento geral)
-pCachoeira = Muskingum(pReservatorios, 2.6, 0.3)
+pCachoeira = UpstreamRouting(pReservatorios, 2.6, 0.3)
