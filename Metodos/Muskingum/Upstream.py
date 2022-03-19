@@ -14,7 +14,6 @@ def TesteDeConvergencia(previous, current):
 
     return True
 
-
 # O routing de jusante para montante
 # recebe um hidrograma de jusante (downstream)
 def UpstreamRouting(downstream, K, x):
