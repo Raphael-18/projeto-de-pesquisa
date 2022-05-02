@@ -147,7 +147,7 @@ for i in range(m):
 # 8.2. Muskingum para Atibaia
 # K = 3.5 dias (de Valinhos para Atibaia)
 # X = 0.3 (fator de amortecimento geral)
-uAtibaia = UpstreamRouting(deficit, 3.5, 0.3)
+uAtibaia = UpstreamRouting(deficit, 3.5, 0.3, 1.0)
 
 # 8.3.1. Verificacao de atendimento ao minimo outorgavel em Atibaia (2 m3/s)
 deficit = []
@@ -180,8 +180,8 @@ for i in range(m):
 # Muskingum para Atibainha
 # K = 4.9 dias (de Atibaia para Atibainha)
 # X = 0.3 (fator de amortecimento geral)
-pAtibainha = UpstreamRouting(pReservatorios, 4.9, 0.3)
+pAtibainha = UpstreamRouting(pReservatorios, 4.9, 0.3, 1.0)
 # Muskingum para Cachoeira
 # K = 2.6 dias (de Atibaia para Cachoeira)
 # X = 0.3 (fator de amortecimento geral)
-pCachoeira = UpstreamRouting(pReservatorios, 2.6, 0.3)
+pCachoeira = UpstreamRouting(pReservatorios, 2.6, 0.3, 1.0)

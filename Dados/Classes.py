@@ -3,10 +3,11 @@
 # As evapotranspiracoes potenciais diarias serao todas tomadas
 # como 2.4 mm
 class Dado:
-    def __init__(self, D, P, Q):
+    def __init__(self, D, P, Q, t):
         self.D  = D
         self.P  = P
         self.Q  = Q
+        self.t  = t
     EP = 2.4
 
 # Classe para instanciar as sub-bacias de Atibaia e Valinhos

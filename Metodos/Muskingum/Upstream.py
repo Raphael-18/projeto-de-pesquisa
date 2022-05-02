@@ -16,7 +16,7 @@ def TesteDeConvergencia(previous, current):
 
 # O routing de jusante para montante
 # recebe um hidrograma de jusante (downstream)
-def UpstreamRouting(downstream, K, x):
+def UpstreamRouting(downstream, K, x, T):
     # Iteracao
     k = 1
     # Estimativa inicial
@@ -41,10 +41,10 @@ def UpstreamRouting(downstream, K, x):
         # Derivadas para primeiro e ultimo pontos
         rateS = [0] * len(oldI)
         rateS[0] = oldI[0] - downstream[0]
-        rateS[len(downstream) - 1] = (S[len(downstream) - 1] - S[len(downstream) - 2]) / (2 * 24.0)
+        rateS[len(downstream) - 1] = (S[len(downstream) - 1] - S[len(downstream) - 2]) / (2 * T)
         # Loop para os intermediarios
         for i in range(1, len(downstream) - 1):
-            rateS[i] = (S[i + 1] - S[i - 1]) / (2 * 24.0)
+            rateS[i] = (S[i + 1] - S[i - 1]) / (2 * T)
 
         # Smoothing
         smooth = [0] * len(oldI)

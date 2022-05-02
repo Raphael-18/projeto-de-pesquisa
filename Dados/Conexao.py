@@ -31,14 +31,16 @@ def Store(user, database, bacia, tipo):
         P = []
         Q = []
         D = []
+        t = []
 
         for row in cursor.fetchall():
             P.append(row[3])
             Q.append(row[4])
             D.append(row[5])
+            t.append(row[2])
 
         # Objeto tipo 'Dado'
-        dados = Dado(P = P, Q = Q, D = D)
+        dados = Dado(P = P, Q = Q, D = D, t = t)
         return dados
 
     except mysql.connector.Error as err:
