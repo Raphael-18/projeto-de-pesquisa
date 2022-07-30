@@ -22,18 +22,18 @@ class Decisao:
 # As evapotranspiracoes potenciais diarias serao todas tomadas como 2.4 mm
 class Ponto:
     def __init__(self, C, P, Q, t):
-        self.C  = C
-        self.P  = P
-        self.Q  = Q
-        self.t  = t
+        self.C = C
+        self.P = P
+        self.Q = Q
+        self.t = t
     EP = 2.4
 
 # Classe para acomodar os dados de um reservatorio e
 # permitir acessar informacoes de despacho D
 class Reservatorio:
     def __init__(self, D, t):
-        self.D  = D
-        self.t  = t
+        self.D = D
+        self.t = t
 
 # Classe necessaria para resgatar matrizes de observacoes amostrais, cujas
 # informacoes serao escolhidas aleatoriamente para compor uma janela de previsao

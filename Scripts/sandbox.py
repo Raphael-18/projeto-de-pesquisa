@@ -77,7 +77,7 @@ for i in range(n):
     prevValinhos.amostras[5] = prevValinhos.amostras[5][i + 1:i + 11]
     # Randomizacao de observacoes de 2016 a 2020 para construir artificialmente
     # uma previsao de 10 dias consecutivos
-    prevArtAtibaia = Ponto(C = [], P = [], Q = [], t = [])
+    prevArtAtibaia  = Ponto(C = [], P = [], Q = [], t = [])
     for j in range(10):
         prevArtAtibaia.P.append(prevAtibaia.amostras[random.randrange(1, 6, 1)][j])
     prevArtValinhos = Ponto(C = [], P = [], Q = [], t = [])
@@ -86,10 +86,10 @@ for i in range(n):
 
     # Invocacao do modelo
     decisao = Modelo(
-        obsAtibaia, obsValinhos,
-        revAtibainha, revCachoeira,
+        obsAtibaia    , obsValinhos    ,
+        revAtibainha  , revCachoeira   ,
         prevArtAtibaia, prevArtValinhos,
-        Atibaia, Valinhos
+        Atibaia       , Valinhos
     )
     # Armazenamento em vetores
     despachoAtibainha.append(decisao.Atibainha)

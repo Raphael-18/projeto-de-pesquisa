@@ -21,7 +21,7 @@ from Dados.Classes   import *
 def DBConnection(user, database, secao, tipo):
     try:
         connection = mysql.connector.connect(
-            user = user,
+            user     = user,
             database = database
         )
 

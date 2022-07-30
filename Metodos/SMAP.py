@@ -20,8 +20,8 @@ def SMAP(Str, k2t, Crec, Ponto, Bacia):
 
     # Reservatorios em t = 0
     RSolo = TUin * Str
-    RSup = 0.0
-    RSub = EBin / (1 - (0.5 ** (1 / kkt))) / AD * 86.4
+    RSup  = 0.0
+    RSub  = EBin / (1 - (0.5 ** (1 / kkt))) / AD * 86.4
 
     for i in range(n):
         # Teor de umidade
@@ -49,14 +49,14 @@ def SMAP(Str, k2t, Crec, Ponto, Bacia):
         RSolo += Ponto.P[i] - ES - ER - Rec
 
         if RSolo > Str:
-            ES += RSolo - Str
+            ES   += RSolo - Str
             RSolo = Str
 
         RSup += ES
-        ED = RSup * (1 - (0.5 ** (1 / k2t)))
+        ED    = RSup * (1 - (0.5 ** (1 / k2t)))
         RSup -= ED
 
-        EB = RSub * (1 - (0.5 ** (1 / kkt)))
+        EB    = RSub * (1 - (0.5 ** (1 / kkt)))
         RSub += Rec - EB
 
         Q.append((ED + EB) * Bacia.AD / 86.4)

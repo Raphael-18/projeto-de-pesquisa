@@ -39,7 +39,7 @@ def UpstreamRouting(downstream, K, x, T):
             S[i] = K * ((x * oldI[i]) + ((1 - x) * downstream[i]))
 
         # Derivadas para primeiro e ultimo pontos
-        rateS = [0] * len(oldI)
+        rateS    = [0] * len(oldI)
         rateS[0] = oldI[0] - downstream[0]
         rateS[len(downstream) - 1] = (S[len(downstream) - 1] - S[len(downstream) - 2]) / (2 * T)
         # Loop para os intermediarios
@@ -47,7 +47,7 @@ def UpstreamRouting(downstream, K, x, T):
             rateS[i] = (S[i + 1] - S[i - 1]) / (2 * T)
 
         # Smoothing
-        smooth = [0] * len(oldI)
+        smooth    = [0] * len(oldI)
         smooth[0] = rateS[0]
         smooth[len(downstream) - 1] = rateS[len(downstream) - 1]
         for i in range(1, len(downstream) - 1):
@@ -58,13 +58,10 @@ def UpstreamRouting(downstream, K, x, T):
         for i in range(len(downstream)):
             # Verifica se o dia em questao possui vazao para
             # transportar; caso o dia nao possua, mantem 0
-            if downstream[i] != 0:
+            if downstream[i] > 0 and smooth[i] > 0: # Essa condicao esta correta?
                 newI[i] = downstream[i] + smooth[i]
             else:
-                if smooth[i] > 0:
-                    newI[i] = downstream[i] + smooth[i]
-                else:
-                    newI[i] = downstream[i]
+                newI[i] = downstream[i]
 
         # Checagem de convergencia e atualizacao de estimativas
         # com alfa

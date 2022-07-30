@@ -6,10 +6,10 @@ from scipy.optimize import differential_evolution
 import numpy as np
 
 def Modelo(
-    obsAtibaia, obsValinhos,            # Captacoes, chuvas e vazoes observadas nos pontos (p/ calibrar SMAP)
-    revAtibainha, revCachoeira,         # Despachos observados nos reservatorios (p/ calibrar SMAP)
+    obsAtibaia    , obsValinhos    ,    # Captacoes, chuvas e vazoes observadas nos pontos (p/ calibrar SMAP)
+    revAtibainha  , revCachoeira   ,    # Despachos observados nos reservatorios (p/ calibrar SMAP)
     prevArtAtibaia, prevArtValinhos,    # Previsoes artificiais de 10 dias em cada bacia incremental
-    Atibaia, Valinhos                   # Bacias (dados p/ SMAP)
+    Atibaia       , Valinhos            # Bacias (dados p/ SMAP)
 ):
     # 1. Muskingum de jusante ate o ponto de controle de Atibaia
     # K = 4.9 dias (de Atibainha para Atibaia)
@@ -17,13 +17,13 @@ def Modelo(
     # X = 0.3 (fator de amortecimento geral)
     # p/ Atibainha: necessario subdividir o metodo em 5 passos
     j = 1
-    pAtibaia1  = DownstreamRouting(revAtibainha.D, 4.9 / 5, 0.3, 1.0)
+    pAtibaia1 = DownstreamRouting(revAtibainha.D, 4.9 / 5, 0.3, 1.0)
     while j < 5:
         pAtibaia1 = DownstreamRouting(pAtibaia1, 4.9 / 5, 0.3, 1.0)
         j = j + 1
     # p/ Cachoeira: necessario subdividir o metodo em 3 passos
     j = 1
-    pAtibaia2  = DownstreamRouting(revCachoeira.D, 2.6 / 3, 0.3, 1.0)
+    pAtibaia2 = DownstreamRouting(revCachoeira.D, 2.6 / 3, 0.3, 1.0)
     while j < 3:
         pAtibaia2 = DownstreamRouting(pAtibaia2, 2.6 / 3, 0.3, 1.0)
         j = j + 1
@@ -38,7 +38,7 @@ def Modelo(
     # X = 0.3 (fator de amortecimento geral)
     # p/ Valinhos: necessario subdividir o metodo em 4 passos
     j = 1
-    pValinhos  = DownstreamRouting(obsAtibaia.Q, 3.5 / 4, 0.3, 1.0)
+    pValinhos = DownstreamRouting(obsAtibaia.Q, 3.5 / 4, 0.3, 1.0)
     while j < 4:
         pValinhos = DownstreamRouting(pValinhos, 3.5 / 4, 0.3, 1.0)
         j = j + 1
@@ -62,8 +62,8 @@ def Modelo(
         Str, k2t, Crec = p
         Q = SMAP(Str, k2t, Crec, obsValinhos, Valinhos)
 
-        a = 0
-        b = 0
+        a  = 0
+        b  = 0
         Qm = np.mean(incrementais)
         for i in range(n):
             a += (incrementais[i] - Q[i]) ** 2
@@ -98,8 +98,8 @@ def Modelo(
         Str, k2t, Crec = p
         Q = SMAP(Str, k2t, Crec, obsAtibaia, Atibaia)
 
-        a = 0
-        b = 0
+        a  = 0
+        b  = 0
         Qm = np.mean(incrementais)
         for i in range(n):
             a += (incrementais[i] - Q[i]) ** 2
