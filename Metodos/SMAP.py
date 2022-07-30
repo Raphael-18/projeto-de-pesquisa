@@ -2,10 +2,10 @@
 #   Str : capacidade de saturacao (mm)
 #   k2t : constante de recessao para o escoamento superficial (dias)
 #   Crec: recarga subterranea (%)
-def SMAP(Str, k2t, Crec, Dados, Bacia):
+def SMAP(Str, k2t, Crec, Ponto, Bacia):
     # Input
     # AD: area de drenagem (km2)
-    n, AD = len(Dados.P), Bacia.AD
+    n, AD = len(Ponto.P), Bacia.AD
 
     # Inicializacao
     # TU: teor de umidade
@@ -28,16 +28,16 @@ def SMAP(Str, k2t, Crec, Dados, Bacia):
         TU = RSolo / Str
 
         # Escoamento direto
-        if Dados.P[i] > Ai:
-            ES = ((Dados.P[i] - Ai) ** 2) / (Dados.P[i] - Ai + Str - RSolo)
+        if Ponto.P[i] > Ai:
+            ES = ((Ponto.P[i] - Ai) ** 2) / (Ponto.P[i] - Ai + Str - RSolo)
         else:
             ES = 0.0
 
         # Evapotranspiracao real
-        if (Dados.P[i] - ES) > Dados.EP:
-            ER = Dados.EP
+        if (Ponto.P[i] - ES) > Ponto.EP:
+            ER = Ponto.EP
         else:
-            ER = Dados.P[i] - ES + ((Dados.EP - Dados.P[i] + ES) * TU)
+            ER = Ponto.P[i] - ES + ((Ponto.EP - Ponto.P[i] + ES) * TU)
 
         # Recarga
         if RSolo > (Capc * Str):
@@ -46,7 +46,7 @@ def SMAP(Str, k2t, Crec, Dados, Bacia):
             Rec = 0.0
 
         # Atualiza reservatorio-solo
-        RSolo += Dados.P[i] - ES - ER - Rec
+        RSolo += Ponto.P[i] - ES - ER - Rec
 
         if RSolo > Str:
             ES += RSolo - Str

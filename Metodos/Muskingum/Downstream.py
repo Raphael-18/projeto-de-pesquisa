@@ -8,7 +8,7 @@ def DownstreamRouting(upstream, K, x, T):
 
     n = len(upstream)
     downstream = [0] * n
-    # Valor inicial de jusante é igual ao de montante
+    # Valor inicial de jusante e igual ao de montante
     downstream[0] = upstream[0]
     # Loop entre segunda e ultima entradas
     for i in range(1, n):

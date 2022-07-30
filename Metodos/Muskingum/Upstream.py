@@ -7,7 +7,7 @@ def TesteDeConvergencia(previous, current):
     # e simplesmente continuar
     for i in range(1, len(previous)):
         # Check de nulidade deve vir primeiro
-        if previous[i] == 0 or abs((current[i] - previous[i]) / current[i]) <= 0.001:
+        if current[i] == 0 or abs((current[i] - previous[i]) / current[i]) <= 0.001:
             continue
         else:
             return False
@@ -61,7 +61,10 @@ def UpstreamRouting(downstream, K, x, T):
             if downstream[i] != 0:
                 newI[i] = downstream[i] + smooth[i]
             else:
-                newI[i] = downstream[i]
+                if smooth[i] > 0:
+                    newI[i] = downstream[i] + smooth[i]
+                else:
+                    newI[i] = downstream[i]
 
         # Checagem de convergencia e atualizacao de estimativas
         # com alfa
