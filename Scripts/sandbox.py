@@ -36,6 +36,8 @@ n = 31
 # Respostas diarias
 despachoAtibainha = []
 despachoCachoeira = []
+# Com ou sem graficos
+flag = '' # 'comGraficos'
 # Loop para invocar o modelo e extrair uma decisao de cada dia
 for i in range(n):
     # Necessario conectar ao banco de dados a cada iteracao para que
@@ -89,11 +91,14 @@ for i in range(n):
         obsAtibaia    , obsValinhos    ,
         revAtibainha  , revCachoeira   ,
         prevArtAtibaia, prevArtValinhos,
-        Atibaia       , Valinhos
+        Atibaia       , Valinhos       ,
+        flag          , step = i
     )
     # Armazenamento em vetores
     despachoAtibainha.append(decisao.Atibainha)
     despachoCachoeira.append(decisao.Cachoeira)
+
+    Despachos(despachoAtibainha, step = i)
 
 print(despachoAtibainha)
 print(despachoCachoeira)
