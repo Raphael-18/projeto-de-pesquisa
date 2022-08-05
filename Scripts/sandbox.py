@@ -37,7 +37,7 @@ n = 31
 despachoAtibainha = []
 despachoCachoeira = []
 # Com ou sem graficos
-flag = '' # 'comGraficos'
+flag = 'comGraficos'
 # Loop para invocar o modelo e extrair uma decisao de cada dia
 for i in range(n):
     # Necessario conectar ao banco de dados a cada iteracao para que
@@ -98,7 +98,7 @@ for i in range(n):
     despachoAtibainha.append(decisao.Atibainha)
     despachoCachoeira.append(decisao.Cachoeira)
 
-    Despachos(despachoAtibainha, step = i)
+    Despachos(despachoAtibainha, despachoCachoeira, step = i)
 
 print(despachoAtibainha)
 print(despachoCachoeira)

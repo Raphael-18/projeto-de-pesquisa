@@ -38,6 +38,11 @@ def ChuvaVazao(
     # Titulos dos eixos
     ax1.set_ylabel('Precipitação [mm]')
     axes2.set_ylabel('Vazão [m³/s]')
+    # Shift no grafico (p/ cima)
+    box = ax1.get_position()
+    box.y0 = box.y0 + 0.050
+    box.y1 = box.y1 + 0.050
+    ax1.set_position(box)
 
     # Plot para Valinhos
     ax2 = fig.add_subplot(223)
@@ -63,6 +68,11 @@ def ChuvaVazao(
     # Titulos dos eixos
     ax2.set_ylabel('Precipitação [mm]')
     axes3.set_ylabel('Vazão [m³/s]')
+    # Shift no grafico (p/ baixo)
+    box = ax2.get_position()
+    box.y0 = box.y0 - 0.050
+    box.y1 = box.y1 - 0.050
+    ax2.set_position(box)
 
     # Coeficientes de Nash-Sutcliffe
     ax3 = fig.add_subplot(233)
@@ -84,9 +94,14 @@ def ChuvaVazao(
     ax3.yaxis.set_major_locator(ticker.FixedLocator(positions))
     ax3.yaxis.set_major_formatter(ticker.FixedFormatter(labels))
     ax3.set_xlabel('Coeficiente de Nash-Sutcliffe')
+    # Shift no grafico (p/ cima)
+    box = ax3.get_position()
+    box.y0 = box.y0 + 0.050
+    box.y1 = box.y1 + 0.050
+    ax3.set_position(box)
 
     # plt.show()
-    fileName = 'T' + str(i) + '.pdf'
+    fileName = 'C' + str(i) + '.pdf'
     fig.savefig('/Users/raphael/PycharmProjects/projeto-de-pesquisa/Imagens/SMAP/' + fileName)
 
 def Routings(
@@ -105,10 +120,14 @@ def Routings(
 
     ax1.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m'))
     ax1.xaxis.set_major_locator(mdates.MonthLocator())
-
     # Ajuste de escalas
     ax1.set_ylim(-1.0, 10.0)
     ax1.set_ylabel('Deficit [m³/s]')
+    # Shift no grafico (p/ cima)
+    box = ax1.get_position()
+    box.y0 = box.y0 + 0.050
+    box.y1 = box.y1 + 0.050
+    ax1.set_position(box)
 
     # Atibaia - Atibainha
     ax2 = fig.add_subplot(223)
@@ -118,10 +137,14 @@ def Routings(
 
     ax2.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m'))
     ax2.xaxis.set_major_locator(mdates.MonthLocator())
-
     # Ajuste de escalas
-    ax2.set_ylim(-1.0, 4.0)
+    ax2.set_ylim(-1.0, 8.0)
     ax2.set_ylabel('Deficit [m³/s]')
+    # Shift no grafico (p/ baixo)
+    box = ax2.get_position()
+    box.y0 = box.y0 - 0.050
+    box.y1 = box.y1 - 0.050
+    ax2.set_position(box)
 
     # Atibaia - Cachoeira
     ax3 = fig.add_subplot(222)
@@ -133,39 +156,69 @@ def Routings(
     ax3.xaxis.set_major_locator(mdates.MonthLocator())
 
     # Ajuste de escalas
-    ax3.set_ylim(-1.0, 4.0)
+    ax3.set_ylim(-1.0, 8.0)
     ax3.set_ylabel('Deficit [m³/s]')
-
-    # Shift no ultimo grafico
-    box = ax3.get_position()
-    box.x0 = box.x0 + 0.025
-    box.x1 = box.x1 + 0.025
-    ax3.set_position(box)
+    # Shift no grafico (p/ direita)
+    box1 = ax3.get_position()
+    box1.x0 = box1.x0 + 0.050
+    box1.x1 = box1.x1 + 0.050
+    ax3.set_position(box1)
+    # Shift no grafico (p/ cima)
+    box2 = ax3.get_position()
+    box2.y0 = box2.y0 + 0.050
+    box2.y1 = box2.y1 + 0.050
+    ax3.set_position(box2)
 
     # plt.show()
-    fileName = 'T' + str(i) + '.pdf'
+    fileName = 'R' + str(i) + '.pdf'
     fig.savefig('/Users/raphael/PycharmProjects/projeto-de-pesquisa/Imagens/Despachos/' + fileName)
 
 def Despachos(
-        despachos, step
+        despachosAtibainha, despachosCachoeira, step
 ):
     i = step
 
     fig = plt.figure(figsize=(10, 6))
 
-    ax1 = fig.add_subplot(111)
+    # Atibainha
+    ax1 = fig.add_subplot(211)
     ax1.grid(b=True, which='major')
     ax1.set_axisbelow(True)
 
-    n = len(despachos)
+    n = len(despachosAtibainha)
     t = range(1, n + 1, 1)
 
-    ax1.scatter(t, despachos)
+    ax1.scatter(t, despachosAtibainha)
     # Ajuste de escalas
     ax1.set_xlim(1.0, 31.0)
     ax1.set_ylim(-1.0, 10.0)
     ax1.set_xlabel('Dias')
     ax1.set_ylabel('Despacho [m³/s]')
+    # Shift no grafico (p/ cima)
+    box = ax1.get_position()
+    box.y0 = box.y0 + 0.030
+    box.y1 = box.y1 + 0.030
+    ax1.set_position(box)
+
+    # Cachoeira
+    ax2 = fig.add_subplot(212)
+    ax2.grid(b=True, which='major')
+    ax2.set_axisbelow(True)
+
+    n = len(despachosCachoeira)
+    t = range(1, n + 1, 1)
+
+    ax2.scatter(t, despachosCachoeira)
+    # Ajuste de escalas
+    ax2.set_xlim(1.0, 31.0)
+    ax2.set_ylim(-1.0, 10.0)
+    ax2.set_xlabel('Dias')
+    ax2.set_ylabel('Despacho [m³/s]')
+    # Shift no grafico (p/ baixo)
+    box = ax2.get_position()
+    box.y0 = box.y0 - 0.030
+    box.y1 = box.y1 - 0.030
+    ax2.set_position(box)
 
     # plt.show()
     fileName = 'D' + str(i) + '.pdf'
