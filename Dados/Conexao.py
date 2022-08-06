@@ -34,7 +34,7 @@ def DBConnection(user, database, secao, tipo):
 
             # Pontos de controle
             if secao == 'Atibaia' or secao == 'Valinhos':
-                # Vetores para armazenar dados lidos (t nao e necessario)
+                # Vetores para armazenar dados lidos
                 C = []
                 P = []
                 Q = []
@@ -46,12 +46,12 @@ def DBConnection(user, database, secao, tipo):
                     Q.append(row[3])
                     t.append(row[1])
 
-                # Objeto tipo 'Dado'
+                # Objeto tipo 'Ponto'
                 dados = Ponto(C = C, P = P, Q = Q, t = t)
                 return dados
             # Reservatorios
             else:
-                # Vetores para armazenar dados lidos (t nao e necessario)
+                # Vetores para armazenar dados lidos
                 D = []
                 t = []
 
@@ -59,6 +59,7 @@ def DBConnection(user, database, secao, tipo):
                     D.append(row[2])
                     t.append(row[1])
 
+                # Objeto tipo 'Reservatorio'
                 dados = Reservatorio(D = D, t = t)
                 return dados
 
@@ -66,7 +67,7 @@ def DBConnection(user, database, secao, tipo):
         else:
             query = "SELECT * FROM " + tipo + " WHERE Ponto = %s"
             cursor.execute(query, [secao])
-            # Vetores para armazenar dados lidos (t nao e necessario)
+            # Vetores para armazenar dados lidos
             t     = []
             Y2016 = []
             Y2017 = []

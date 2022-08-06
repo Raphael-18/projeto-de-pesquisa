@@ -27,7 +27,7 @@ Valinhos = Bacia(
 ######################################################################
 # ETAPA 2:
 # Loop para executar o modelo ao longo de um mes (marco), fazendo
-# slices nos vetores de calibracao, para caminhar de 59 em 59 dias
+# slices nos vetores de calibracao, para caminhar de 60 em 60 dias
 # (2 meses) e escolhendo a cada iteracao valores aleatorios de chuva
 # para simular dados de previsao de 10 em 10 dias
 
@@ -44,25 +44,25 @@ for i in range(n):
     # ao fazer os slices nao haja perda de informacao (recorte em
     # vetores modificados e nao nos originais)
 
+    # 2.1. OBSERVACAO
     # Pontos de controle (dados observados)
     obsAtibaia  = DBConnection("test", "Bacias", "Atibaia" , "Calibracao")
     obsValinhos = DBConnection("test", "Bacias", "Valinhos", "Calibracao")
     # Slices nos pontos de controle
-    obsAtibaia.C  = obsAtibaia.C[i:i + 59]
-    obsAtibaia.P  = obsAtibaia.P[i:i + 59]
-    obsAtibaia.Q  = obsAtibaia.Q[i:i + 59]
-    obsValinhos.C = obsValinhos.C[i:i + 59]
-    obsValinhos.P = obsValinhos.P[i:i + 59]
-    obsValinhos.Q = obsValinhos.Q[i:i + 59]
-
+    obsAtibaia.C  = obsAtibaia.C[i:i + 60]
+    obsAtibaia.P  = obsAtibaia.P[i:i + 60]
+    obsAtibaia.Q  = obsAtibaia.Q[i:i + 60]
+    obsValinhos.C = obsValinhos.C[i:i + 60]
+    obsValinhos.P = obsValinhos.P[i:i + 60]
+    obsValinhos.Q = obsValinhos.Q[i:i + 60]
     # Reservatorios
     revAtibainha = DBConnection("test", "Bacias", "Atibainha", "Calibracao")
     revCachoeira = DBConnection("test", "Bacias", "Cachoeira", "Calibracao")
     # Slices nos reservatorios
-    revAtibainha.D = revAtibainha.D[i:i + 59]
-    revCachoeira.D = revCachoeira.D[i:i + 59]
+    revAtibainha.D = revAtibainha.D[i:i + 60]
+    revCachoeira.D = revCachoeira.D[i:i + 60]
 
-    # Previsoes
+    # 2.2. PREVISAO
     prevAtibaia  = DBConnection("test", "Bacias", "Atibaia" , "Previsoes")
     prevValinhos = DBConnection("test", "Bacias", "Valinhos", "Previsoes")
     # Slices nas previsoes de Atibaia
@@ -79,14 +79,19 @@ for i in range(n):
     prevValinhos.amostras[5] = prevValinhos.amostras[5][i + 1:i + 11]
     # Randomizacao de observacoes de 2016 a 2020 para construir artificialmente
     # uma previsao de 10 dias consecutivos
-    prevArtAtibaia  = Ponto(C = [], P = [], Q = [], t = [])
+    # Importante: para executar o modelo SMAP e necessario fornecer como input
+    # uma serie continua de dados de observacao (utilizados para calibrar variaveis)
+    # + previsao. Logo, os vetores artificiais devem conter 70 entradas (60 + 10)
+    prevArtAtibaia    = Ponto(C = [], P = [], Q = [], t = [])
+    prevArtAtibaia.P  = prevArtAtibaia.P  + obsAtibaia.P
     for j in range(10):
         prevArtAtibaia.P.append(prevAtibaia.amostras[random.randrange(1, 6, 1)][j])
-    prevArtValinhos = Ponto(C = [], P = [], Q = [], t = [])
+    prevArtValinhos   = Ponto(C = [], P = [], Q = [], t = [])
+    prevArtValinhos.P = prevArtValinhos.P + obsValinhos.P
     for j in range(10):
         prevArtValinhos.P.append(prevValinhos.amostras[random.randrange(1, 6, 1)][j])
 
-    # Invocacao do modelo
+    # 2.3 INVOCACAO DO MODELO
     decisao = Modelo(
         obsAtibaia    , obsValinhos    ,
         revAtibainha  , revCachoeira   ,
@@ -97,7 +102,7 @@ for i in range(n):
     # Armazenamento em vetores
     despachoAtibainha.append(decisao.Atibainha)
     despachoCachoeira.append(decisao.Cachoeira)
-
+    # Geracao de graficos
     Despachos(despachoAtibainha, despachoCachoeira, step = i)
 
 print(despachoAtibainha)

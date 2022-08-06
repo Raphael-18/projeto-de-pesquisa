@@ -14,10 +14,10 @@ print("Resultados:")
 for i in range(len(resultado)):
     print('%.3f \t %.3f' % (resultado[i], answer[i]))
 
-NSE = [[0] * 2 for l in range(31)]
-NSE[0][0] = 6
-NSE[0][1] = 7
-NSE[1][0] = 8
-NSE[1][1] = 9
-print(NSE)
-print(NSE[0:2][1][0])
+# NSE = [[0] * 2 for l in range(31)]
+# NSE[0][0] = 6
+# NSE[0][1] = 7
+# NSE[1][0] = 8
+# NSE[1][1] = 9
+# print(NSE)
+# print(NSE[0:2][1][0])

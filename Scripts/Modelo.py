@@ -9,7 +9,7 @@ import numpy as np
 def Modelo(
     obsAtibaia    , obsValinhos    ,    # Captacoes, chuvas e vazoes observadas nos pontos (p/ calibrar SMAP)
     revAtibainha  , revCachoeira   ,    # Despachos observados nos reservatorios (p/ calibrar SMAP)
-    prevArtAtibaia, prevArtValinhos,    # Previsoes artificiais de 10 dias em cada bacia incremental
+    prevArtAtibaia, prevArtValinhos,    # 60 dias observados + previsoes artificiais de 10 dias em cada bacia incremental
     Atibaia       , Valinhos       ,    # Bacias (dados p/ SMAP)
     flag          , step                # Flag e time step necessarios para geracao de graficos
                                         # de apoio ao pos-processamento
@@ -79,11 +79,11 @@ def Modelo(
     # Resultados
     # print('Valinhos:')
     # print('Status : %s' % result1['message'])
-    # print('Avaliações realizadas: %d' % result1['nfev'])
+    # print('Avaliacoes realizadas: %d' % result1['nfev'])
     # Solucao
     solution1   = result1['x']
     evaluation1 = objective1(solution1)
-    # print('Solução: f([%.3f \t %.3f \t %.3f]) = %.3f' % (solution1[0], solution1[1], solution1[2], evaluation1))
+    # print('Solucao: f([%.3f \t %.3f \t %.3f]) = %.3f' % (solution1[0], solution1[1], solution1[2], evaluation1))
 
     # 5. Separacao de vazoes em Atibaia para obter as incrementais
     # A vazao observada na secao corresponde ao que choveu mais o que foi
@@ -116,13 +116,14 @@ def Modelo(
     # print()
     # print('Atibaia:')
     # print('Status : %s' % result2['message'])
-    # print('Avaliações realizadas: %d' % result2['nfev'])
+    # print('Avaliacoes realizadas: %d' % result2['nfev'])
     # Solucao
     solution2   = result2['x']
     evaluation2 = objective2(solution2)
-    # print('Solução: f([%.3f \t %.3f \t %.3f]) = %.3f' % (solution2[0], solution2[1], solution2[2], evaluation2))
+    # print('Solucao: f([%.3f \t %.3f \t %.3f]) = %.3f' % (solution2[0], solution2[1], solution2[2], evaluation2))
 
     # 7. Calculo de vazoes previstas com parametros SMAP calibrados para cada sub-bacia
+    # O vetor de previsoes artificias e formado por 60 observacoes + 10 previsoes (70 dias continuos)
     calcAtibaia  = SMAP(solution2[0], solution2[1], solution2[2], prevArtAtibaia , Atibaia )
     calcValinhos = SMAP(solution1[0], solution1[1], solution1[2], prevArtValinhos, Valinhos)
 
@@ -134,15 +135,11 @@ def Modelo(
         NSE[0][0] = NSEAtibaia
         NSE[0][1] = NSEValinhos
 
-        checkAtibaia  = SMAP(solution2[0], solution2[1], solution2[2], obsAtibaia , Atibaia )
-        checkValinhos = SMAP(solution1[0], solution1[1], solution1[2], obsValinhos, Valinhos)
-
         ChuvaVazao(
             obsAtibaia         , obsValinhos         ,
             incrementaisAtibaia, incrementaisValinhos,
             prevArtAtibaia     , prevArtValinhos     ,
             calcAtibaia        , calcValinhos        ,
-            checkAtibaia       , checkValinhos       ,
             NSE                , step
         )
 
@@ -210,10 +207,11 @@ def Modelo(
         )
 
     # 12. Decisao de despacho em Atibainha e Cachoeira
-    # A decisao e o despacho na posicao 0 ou na posicao 1?
+    # A decisao e o despacho na posicao 60: 0 e o primeiro dia e 59
+    # o ultimo dia observado (01/03/21 em diante).
     decisao = Decisao(
-        Atibainha = pAtibainha[1],
-        Cachoeira = pCachoeira[1]
+        Atibainha = pAtibainha[60],
+        Cachoeira = pCachoeira[60]
     )
 
     return decisao

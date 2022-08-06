@@ -3,35 +3,33 @@ import matplotlib.pyplot as plt
 from matplotlib import ticker
 
 def ChuvaVazao(
-        obsAtibaia , obsValinhos ,      # Valores observados para plotar pluviogramas de 59 dias          (azul)
+        obsAtibaia , obsValinhos ,      # Valores observados para plotar pluviogramas de 60 dias          (azul)
         incAtibaia , incValinhos ,      # Incrementos de vazao de eventos chuvosos                        (azul)
         prevAtibaia, prevValinhos,      # Chuvas previstas de 10 dias para complementar os pluviogramas   (laranja)
-        calcAtibaia, calcValinhos,      # Vazoes futuras calculadas apos calibracao do modelo chuva-vazao (laranja)
-        valiAtibaia, valiValinhos,      # Validacao do periodo de observacao com parametros calibrados    (cinza)
+        calcAtibaia, calcValinhos,      # Vazoes calculadas apos calibracao do modelo chuva-vazao (cinza + laranja)
         NSE        , step               # NSE de cada rodada e time step para translacao e slice dos vetores
 ):
     i = step
 
     fig = plt.figure(figsize=(10,6))
-
     # Plot para Atibaia
     ax1 = fig.add_subplot(221)
     # Eixo das precipitacoes
     plt.ylim(0.0, 150.0)
-    ax1.bar(obsAtibaia.t[i:i + 59]     , obsAtibaia.P , color='C0', alpha=0.5) # 59 dias observados (azul)
-    ax1.bar(obsAtibaia.t[i + 60:i + 70], prevAtibaia.P, color='C1', alpha=0.5) # 10 dias previstos  (laranja)
+    ax1.bar(obsAtibaia.t[i:i + 60]     , obsAtibaia.P        , color='C0', alpha=0.5) # 60 dias observados (azul)
+    ax1.bar(obsAtibaia.t[i + 60:i + 70], prevAtibaia.P[60:70], color='C1', alpha=0.5) # 10 dias previstos  (laranja)
     # Coloca pluviogramas de ponta cabeca
     plt.gca().invert_yaxis()
 
     # Eixo auxiliar para hidrogramas
     axes2 = ax1.twinx()
     axes2.set_ylim(0.0, 50.0)
-    axes2.plot(obsAtibaia.t[i:i + 59],
+    axes2.plot(obsAtibaia.t[i:i + 60],
                incAtibaia)                  # Advem das observacoes, porem com separacao de despachos e captacoes
-    axes2.plot(obsAtibaia.t[i:i + 59],
-               valiAtibaia, 'C7--')         # Recalculo de vazoes durante o periodo de observacao, para checagem
+    axes2.plot(obsAtibaia.t[i:i + 61],
+               calcAtibaia[0:61] , 'C7--')  # Recalculo de vazoes durante o periodo de observacao, para checagem
     axes2.plot(obsAtibaia.t[i + 60:i + 70],
-               calcAtibaia, 'C1--')         # Calculado na janela de previsao
+               calcAtibaia[60:70], 'C1--')  # Calculado na janela de previsao
     # Formatacao do eixo das abscissas, das datas
     ax1.xaxis.set_major_formatter(mdates.DateFormatter('%m/%Y'))
     ax1.xaxis.set_major_locator(mdates.MonthLocator())
@@ -48,20 +46,20 @@ def ChuvaVazao(
     ax2 = fig.add_subplot(223)
     # Eixo das precipitacoes
     plt.ylim(0.0, 150.0)
-    ax2.bar(obsValinhos.t[i:i + 59]     , obsValinhos.P , color='C0', alpha=0.5)  # 59 dias observados (azul)
-    ax2.bar(obsValinhos.t[i + 60:i + 70], prevValinhos.P, color='C1', alpha=0.5)  # 10 dias previstos  (laranja)
+    ax2.bar(obsValinhos.t[i:i + 60]     , obsValinhos.P        , color='C0', alpha=0.5)  # 60 dias observados (azul)
+    ax2.bar(obsValinhos.t[i + 60:i + 70], prevValinhos.P[60:70], color='C1', alpha=0.5)  # 10 dias previstos  (laranja)
     # Coloca pluviogramas de ponta cabeca
     plt.gca().invert_yaxis()
 
     # Eixo auxiliar para hidrogramas
     axes3 = ax2.twinx()
     axes3.set_ylim(0.0, 50.0)
-    axes3.plot(obsValinhos.t[i:i + 59],
+    axes3.plot(obsValinhos.t[i:i + 60],
                incValinhos)                 # Advem das observacoes, porem com separacao de despachos e captacoes
-    axes3.plot(obsValinhos.t[i:i + 59],
-               valiValinhos, 'C7--')         # Recalculo de vazoes durante o periodo de observacao, para checagem
+    axes3.plot(obsValinhos.t[i:i + 61],
+               calcValinhos[0:61] , 'C7--') # Recalculo de vazoes durante o periodo de observacao, para checagem
     axes3.plot(obsValinhos.t[i + 60:i + 70],
-               calcValinhos, 'C1--')         # Calculado na janela de previsao
+               calcValinhos[60:70], 'C1--') # Calculado na janela de previsao
     # Formatacao do eixo das abscissas, das datas
     ax2.xaxis.set_major_formatter(mdates.DateFormatter('%m/%Y'))
     ax2.xaxis.set_major_locator(mdates.MonthLocator())
@@ -115,8 +113,8 @@ def Routings(
     # Valinhos - Atibaia
     ax1  = fig.add_subplot(221)
 
-    ax1.plot(observadoPonto.t[i + 60:i + 70], deficitValinhos        , '-o'  ) # Deficit nos 10 dias previstos  (azul)
-    ax1.plot(observadoPonto.t[i + 60:i + 70], upstreamValinhosAtibaia, 'C1--') # Resposta nos 10 dias previstos (laranja)
+    ax1.plot(observadoPonto.t[i:i + 70], deficitValinhos        , '-o'  ) # Deficit nos 70 dias  (azul)
+    ax1.plot(observadoPonto.t[i:i + 70], upstreamValinhosAtibaia, 'C1--') # Resposta nos 70 dias (laranja)
 
     ax1.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m'))
     ax1.xaxis.set_major_locator(mdates.MonthLocator())
@@ -132,8 +130,8 @@ def Routings(
     # Atibaia - Atibainha
     ax2 = fig.add_subplot(223)
 
-    ax2.plot(observadoPonto.t[i + 60:i + 70], deficitReservatorios    , '-o'  )  # Deficit nos 10 dias previstos  (azul)
-    ax2.plot(observadoPonto.t[i + 60:i + 70], upstreamAtibaiaAtibainha, 'C1--')  # Resposta nos 10 dias previstos (laranja)
+    ax2.plot(observadoPonto.t[i:i + 70], deficitReservatorios    , '-o'  )  # Deficit nos 70 dias  (azul)
+    ax2.plot(observadoPonto.t[i:i + 70], upstreamAtibaiaAtibainha, 'C1--')  # Resposta nos 70 dias (laranja)
 
     ax2.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m'))
     ax2.xaxis.set_major_locator(mdates.MonthLocator())
@@ -149,8 +147,8 @@ def Routings(
     # Atibaia - Cachoeira
     ax3 = fig.add_subplot(222)
 
-    ax3.plot(observadoPonto.t[i + 60:i + 70], deficitReservatorios    , '-o'  )  # Deficit nos 10 dias previstos  (azul)
-    ax3.plot(observadoPonto.t[i + 60:i + 70], upstreamAtibaiaCachoeira, 'C1--')  # Resposta nos 10 dias previstos (laranja)
+    ax3.plot(observadoPonto.t[i:i + 70], deficitReservatorios    , '-o'  )  # Deficit nos 70 dias  (azul)
+    ax3.plot(observadoPonto.t[i:i + 70], upstreamAtibaiaCachoeira, 'C1--')  # Resposta nos 70 dias (laranja)
 
     ax3.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m'))
     ax3.xaxis.set_major_locator(mdates.MonthLocator())
