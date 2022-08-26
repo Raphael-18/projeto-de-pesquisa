@@ -3,46 +3,45 @@ from Scripts.Modelo import *
 from timeit import default_timer as timer
 import random
 
-# Inicio da cronometragem do algoritmo
+# Inicio de cronometragem
 start = timer()
 
 ######################################################################
 # ETAPA 1:
 # Inicializacao de variaveis de interesse (bacias)
-
-# (A instanciacao de EBmin sera feita via loop)
 Atibaia = Bacia(
     AD   = 477,
     Capc = 0.5,
-    EB   = None,
     kkt  = 40.0
 )
 Valinhos = Bacia(
     AD   = 1074,
     Capc = 0.4,
-    EB   = None,
     kkt  = 55.0
 )
 
 ######################################################################
 # ETAPA 2:
 # Loop para executar o modelo ao longo de um mes (marco), fazendo
-# slices nos vetores de calibracao, para caminhar de 60 em 60 dias
-# (2 meses) e escolhendo a cada iteracao valores aleatorios de chuva
+# slices em vetores de calibracao, para caminhar de 60 em 60 dias
+# (2 meses), e escolhendo a cada iteracao valores aleatorios de chuva
 # para simular dados de previsao de 10 em 10 dias
 
 # Dias de marco
 n = 31
-# Respostas diarias
-despachoAtibainha = []
-despachoCachoeira = []
 # Com ou sem graficos
 flag = 'comGraficos'
+# Funcao objetivo para otimizacoes
+#  1: NSE: Nash-Sutcliffe
+#  2: SSQ: Sum of Squares of Deviation
+#  3: (I)RMSE: (Inverse) Root-Mean-Square Error
+FO = 3
+
 # Loop para invocar o modelo e extrair uma decisao de cada dia
 for i in range(n):
     # Necessario conectar ao banco de dados a cada iteracao para que
     # ao fazer os slices nao haja perda de informacao (recorte em
-    # vetores modificados e nao nos originais)
+    # vetores modificados e nao em vetores originais)
 
     # 2.1. OBSERVACAO
     # Pontos de controle (dados observados)
@@ -92,22 +91,15 @@ for i in range(n):
         prevArtValinhos.P.append(prevValinhos.amostras[random.randrange(1, 6, 1)][j])
 
     # 2.3 INVOCACAO DO MODELO
-    decisao = Modelo(
+    Modelo(
         obsAtibaia    , obsValinhos    ,
         revAtibainha  , revCachoeira   ,
         prevArtAtibaia, prevArtValinhos,
         Atibaia       , Valinhos       ,
-        flag          , step = i
+        flag          , step = i       ,
+        FO = FO
     )
-    # Armazenamento em vetores
-    despachoAtibainha.append(decisao.Atibainha)
-    despachoCachoeira.append(decisao.Cachoeira)
-    # Geracao de graficos
-    Despachos(despachoAtibainha, despachoCachoeira, step = i)
 
-print(despachoAtibainha)
-print(despachoCachoeira)
-
-# Fim da cronometragem do algoritmo
+# Fim de cronometragem
 end = timer()
 print("Tempo de execucao: %.3f s" % (end - start))

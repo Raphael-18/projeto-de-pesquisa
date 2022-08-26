@@ -1,13 +1,11 @@
 # Classe para instanciar as sub-bacias de Atibaia e Valinhos
 # com valores de AD (area de drenagem), Capc (capacidade de campo)
 # e kkt (constante de recessao para o escoamento basico). A abstracao
-# inicial Ai sera adotada como 2.5 mm para ambas. Os escoamentos
-# basicos iniciais EB serao adotados como a menor vazao observada vezes 0.95
+# inicial Ai sera adotada como 2.5 mm para ambas.
 class Bacia:
-    def __init__(self, AD, Capc, EB, kkt):
+    def __init__(self, AD, Capc, kkt):
         self.AD   = AD
         self.Capc = Capc
-        self.EB   = EB
         self.kkt  = kkt
     Ai = 2.5
 

@@ -2,15 +2,14 @@
 #   Str : capacidade de saturacao (mm)
 #   k2t : constante de recessao para o escoamento superficial (dias)
 #   Crec: recarga subterranea (%)
-def SMAP(Str, k2t, Crec, Ponto, Bacia):
+#   TUin: teor de umidade inicial (adimensional)
+#   EBin: escoamento basico inicial (m3/s)
+def SMAP(Str, k2t, Crec, TUin, EBin, Ponto, Bacia):
     # Input
     # AD: area de drenagem (km2)
     n, AD = len(Ponto.P), Bacia.AD
 
     # Inicializacao
-    # TU: teor de umidade
-    # EB: escoamento basico
-    TUin, EBin = 0.0, Bacia.EB
     Q = []
 
     # Ai  : abstracao inicial (mm)

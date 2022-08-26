@@ -58,10 +58,11 @@ def UpstreamRouting(downstream, K, x, T):
         for i in range(len(downstream)):
             # Verifica se o dia em questao possui vazao para
             # transportar; caso o dia nao possua, mantem 0
-            if downstream[i] > 0 and smooth[i] > 0: # Essa condicao esta correta?
-                newI[i] = downstream[i] + smooth[i]
-            else:
-                newI[i] = downstream[i]
+            # if downstream[i] > 0 and smooth[i] > 0: # Essa condicao esta correta?
+            #     newI[i] = downstream[i] + smooth[i]
+            # else:
+            #     newI[i] = downstream[i]
+            newI[i] = downstream[i] + smooth[i]
 
         # Checagem de convergencia e atualizacao de estimativas
         # com alfa
@@ -73,3 +74,33 @@ def UpstreamRouting(downstream, K, x, T):
             k = k + 1
 
     return newI
+
+# Modelo nao-linear de Muskingum (de primeira ordem) com metodo de Runge-Kutta
+# de quarta ordem (routing de jusante para montante). Variaveis K, X e m devem
+# ser calibradas. O refere-se a output, ou hidrograma de jusante, e T ao time step
+# envolvido (neste caso, 24 horas)
+def UpstreamFORK(K, X, m, T, O):
+    n = len(O)
+
+    # Inflow
+    I = [0] * n
+    # Valor inicial
+    I[n - 1] = O[n - 1]
+
+    # Armazenamento, taxa de variacao
+    S = [0] * n
+
+    for i in range(n - 1, 0, -1):
+        # Armazenamento
+        S[i] = K * (X * I[i] + (1 - X) * O[i]) ** m
+        # Coeficientes
+        k1 = (1 / X) * ((S[i] / K) ** (1 / m) - O[i])
+        k2 = (1 / X) * (((S[i] + 0.5 * T * k1) / K) ** (1 / m) - (0.5 * (O[i] + O[i - 1])))
+        k3 = (1 / X) * (((S[i] + 0.5 * T * k2) / K) ** (1 / m) - (0.5 * (O[i] + O[i - 1])))
+        k4 = (1 / X) * (((S[i] + 1.0 * T * k3) / K) ** (1 / m) - O[i - 1])
+        # Armazenamento em t - 1 (passo anterior)
+        S[i - 1] = S[i] - T * (k1 + 2 * k2 + 2 * k3 + k4) / 6
+        # Inflow em t - 1 (passo anterior)
+        I[i - 1] = (1 / X) * ((S[i - 1] / K) ** (1 / m)) - ((1 - X) / X) * O[i - 1]
+
+    return I
