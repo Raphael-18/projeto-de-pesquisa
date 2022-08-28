@@ -13,7 +13,7 @@ def ChuvaVazao(
 ):
     i = step
 
-    fig = plt.figure(figsize=(10,6))
+    fig = plt.figure(figsize = (10,6))
     # Plot para Atibaia
     ax1 = fig.add_subplot(221)
     # Eixo das precipitacoes
@@ -95,9 +95,9 @@ def ChuvaVazao(
             ax3.axline((0.0, 0.0), (0.0, 4.0))
             ax3.set_xlabel('Soma quadrática de diferenças')
         case 3:
-            ax3.set_xlim(-1.0, 1.0)
+            ax3.set_xlim(-5.0, 20.0)
             ax3.axline((0.0, 0.0), (0.0, 4.0))
-            ax3.set_xlabel('Erro padrão de vazões inversas')
+            ax3.set_xlabel('Erro padrão de vazões')
     # Ajuste do eixo das ordenadas
     positions = [0, 1, 2, 3, 4]
     labels    = ['', 'Atibaia', '', 'Valinhos', '']
@@ -111,7 +111,7 @@ def ChuvaVazao(
 
     # plt.show()
     fileName = str(i) + '.pdf'
-    fig.savefig('/Users/raphael/PycharmProjects/projeto-de-pesquisa/Imagens/ChuvaVazao/' + fileName)
+    fig.savefig('/Users/raphael/Desktop/Programa de Mestrado/Projeto de pesquisa/Qualificação/Artigo/Resultados/1-C/' + fileName)
 
 def Routings(
         observadoPonto         , revAtibainha            , revCachoeira            ,    # Medicoes
@@ -120,7 +120,7 @@ def Routings(
 ):
     i = step
 
-    fig = plt.figure(figsize=(10,6))
+    fig = plt.figure(figsize = (10,6))
     # Valinhos - Atibaia
     ax1  = fig.add_subplot(221)
 
@@ -180,16 +180,16 @@ def Routings(
 
     # plt.show()
     fileName = str(i) + '.pdf'
-    fig.savefig('/Users/raphael/PycharmProjects/projeto-de-pesquisa/Imagens/Routings/' + fileName)
+    fig.savefig('/Users/raphael/Desktop/Programa de Mestrado/Projeto de pesquisa/Qualificação/Artigo/Resultados/3-R/' + fileName)
 
 def Despachos(observadoPonto1, demanda1, observadoPonto2, demanda2, decisao1, decisao2, resultado, step):
     i = step
     n = 31
 
-    fig = plt.figure(figsize=(10, 6))
+    fig = plt.figure(figsize = (10, 6))
 
     ax1 = fig.add_subplot(211)
-    ax1.grid(b=True, which='major')
+    ax1.grid(b = True, which = 'major')
     ax1.set_axisbelow(True)
 
     # Routing desde a secao de controle ate a barragem
@@ -243,4 +243,4 @@ def Despachos(observadoPonto1, demanda1, observadoPonto2, demanda2, decisao1, de
 
     # plt.show()
     fileName = str(i) + '.pdf'
-    fig.savefig('/Users/raphael/PycharmProjects/projeto-de-pesquisa/Imagens/Despachos/' + fileName)
+    fig.savefig('/Users/raphael/Desktop/Programa de Mestrado/Projeto de pesquisa/Qualificação/Artigo/Resultados/2-D/' + fileName)

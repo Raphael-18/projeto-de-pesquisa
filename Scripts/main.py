@@ -34,8 +34,8 @@ flag = 'comGraficos'
 # Funcao objetivo para otimizacoes
 #  1: NSE: Nash-Sutcliffe
 #  2: SSQ: Sum of Squares of Deviation
-#  3: (I)RMSE: (Inverse) Root-Mean-Square Error
-FO = 3
+#  3: RMSE: Root-Mean-Square Error
+FO = 1
 
 # Loop para invocar o modelo e extrair uma decisao de cada dia
 for i in range(n):
@@ -45,8 +45,8 @@ for i in range(n):
 
     # 2.1. OBSERVACAO
     # Pontos de controle (dados observados)
-    obsAtibaia  = DBConnection("test", "Bacias", "Atibaia" , "Calibracao")
-    obsValinhos = DBConnection("test", "Bacias", "Valinhos", "Calibracao")
+    obsAtibaia  = DBConnection('test', 'Bacias', 'Atibaia' , 'Calibracao')
+    obsValinhos = DBConnection('test', 'Bacias', 'Valinhos', 'Calibracao')
     # Slices nos pontos de controle
     obsAtibaia.C  = obsAtibaia.C[i:i + 60]
     obsAtibaia.P  = obsAtibaia.P[i:i + 60]
@@ -55,15 +55,15 @@ for i in range(n):
     obsValinhos.P = obsValinhos.P[i:i + 60]
     obsValinhos.Q = obsValinhos.Q[i:i + 60]
     # Reservatorios
-    revAtibainha = DBConnection("test", "Bacias", "Atibainha", "Calibracao")
-    revCachoeira = DBConnection("test", "Bacias", "Cachoeira", "Calibracao")
+    revAtibainha = DBConnection('test', 'Bacias', 'Atibainha', 'Calibracao')
+    revCachoeira = DBConnection('test', 'Bacias', 'Cachoeira', 'Calibracao')
     # Slices nos reservatorios
     revAtibainha.D = revAtibainha.D[i:i + 60]
     revCachoeira.D = revCachoeira.D[i:i + 60]
 
     # 2.2. PREVISAO
-    prevAtibaia  = DBConnection("test", "Bacias", "Atibaia" , "Previsoes")
-    prevValinhos = DBConnection("test", "Bacias", "Valinhos", "Previsoes")
+    prevAtibaia  = DBConnection('test', 'Bacias', 'Atibaia' , 'Previsoes')
+    prevValinhos = DBConnection('test', 'Bacias', 'Valinhos', 'Previsoes')
     # Slices nas previsoes de Atibaia
     prevAtibaia.amostras[1] = prevAtibaia.amostras[1][i + 1:i + 11]
     prevAtibaia.amostras[2] = prevAtibaia.amostras[2][i + 1:i + 11]
@@ -102,4 +102,4 @@ for i in range(n):
 
 # Fim de cronometragem
 end = timer()
-print("Tempo de execucao: %.3f s" % (end - start))
+print('Tempo de execucao: %.3f s' % (end - start))
