@@ -1,7 +1,10 @@
 import matplotlib.dates  as mdates
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib import rcParams
 from matplotlib import ticker
+# Set font family globally
+rcParams['font.family'] = 'TeX Gyre Termes'
 
 def ChuvaVazao(
         obsAtibaia , obsValinhos ,      # Valores observados para plotar pluviogramas de 60 dias          (azul)
@@ -33,8 +36,15 @@ def ChuvaVazao(
     axes2.plot(obsAtibaia.t[i + 60:i + 70],
                calcAtibaia[60:70], 'C1--')  # Calculado na janela de previsao
     # Formatacao do eixo das abscissas, das datas
-    ax1.xaxis.set_major_formatter(mdates.DateFormatter('%m/%Y'))
-    ax1.xaxis.set_major_locator(mdates.MonthLocator())
+    # ax1.xaxis.set_major_formatter(mdates.DateFormatter('%m/%Y'))
+    # ax1.xaxis.set_major_locator(mdates.MonthLocator())
+    # Eixo x sem marcacoes
+    ax1.tick_params(
+        axis        = 'x'   ,  # changes apply to the x-axis
+        which       = 'both',  # both major and minor ticks are affected
+        bottom      = False ,  # ticks along the bottom edge are off
+        top         = False ,  # ticks along the top edge are off
+        labelbottom = False )  # labels along the bottom edge are off
     # Titulos dos eixos
     ax1.set_ylabel('Precipitação [mm]')
     axes2.set_ylabel('Vazão [m³/s]')
@@ -63,8 +73,15 @@ def ChuvaVazao(
     axes3.plot(obsValinhos.t[i + 60:i + 70],
                calcValinhos[60:70], 'C1--') # Calculado na janela de previsao
     # Formatacao do eixo das abscissas, das datas
-    ax2.xaxis.set_major_formatter(mdates.DateFormatter('%m/%Y'))
-    ax2.xaxis.set_major_locator(mdates.MonthLocator())
+    # ax2.xaxis.set_major_formatter(mdates.DateFormatter('%m/%Y'))
+    # ax2.xaxis.set_major_locator(mdates.MonthLocator())
+    # Eixo x sem marcacoes
+    ax2.tick_params(
+        axis        = 'x'   ,  # changes apply to the x-axis
+        which       = 'both',  # both major and minor ticks are affected
+        bottom      = False ,  # ticks along the bottom edge are off
+        top         = False ,  # ticks along the top edge are off
+        labelbottom = False )  # labels along the bottom edge are off
     # Titulos dos eixos
     ax2.set_ylabel('Precipitação [mm]')
     axes3.set_ylabel('Vazão [m³/s]')
@@ -109,6 +126,10 @@ def ChuvaVazao(
     box.y1 = box.y1 + 0.050
     ax3.set_position(box)
 
+    ax1.set_title('Calibração SMAP/Muskingum não-linear em Atibaia' , fontsize = 10, loc = 'left')
+    ax2.set_title('Calibração SMAP/Muskingum não-linear em Valinhos', fontsize = 10, loc = 'left')
+    ax3.set_title('Atendimento à função objetivo'                   , fontsize = 10, loc = 'left')
+
     # plt.show()
     fileName = str(i) + '.pdf'
     fig.savefig('/Users/raphael/Desktop/Programa de Mestrado/Projeto de pesquisa/Qualificação/Artigo/Resultados/1-C/' + fileName)
@@ -127,8 +148,15 @@ def Routings(
     ax1.plot(observadoPonto.t[i:i + 60], observadoPonto.Q       , 'C0'  ) # Medicoes nos primeiros 60 dias (azul)
     ax1.plot(observadoPonto.t[i:i + 60], upstreamValinhosAtibaia, 'C1--') # Routings apos calibracao       (laranja)
 
-    ax1.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m'))
-    ax1.xaxis.set_major_locator(mdates.MonthLocator())
+    # ax1.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m'))
+    # ax1.xaxis.set_major_locator(mdates.MonthLocator())
+    # Eixo x sem marcacoes
+    ax1.tick_params(
+        axis        = 'x'   ,  # changes apply to the x-axis
+        which       = 'both',  # both major and minor ticks are affected
+        bottom      = False ,  # ticks along the bottom edge are off
+        top         = False ,  # ticks along the top edge are off
+        labelbottom = False )  # labels along the bottom edge are off
     # Ajuste de escalas
     ax1.set_ylim(-1.0, 60.0)
     ax1.set_ylabel('Vazão [m³/s]')
@@ -144,8 +172,15 @@ def Routings(
     ax2.plot(observadoPonto.t[i:i + 60], revAtibainha.D          , 'C0'  )  # Despachos nos primeiros 60 dias (azul)
     ax2.plot(observadoPonto.t[i:i + 60], upstreamAtibaiaAtibainha, 'C1--')  # Routings apos calibracao        (laranja)
 
-    ax2.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m'))
-    ax2.xaxis.set_major_locator(mdates.MonthLocator())
+    # ax2.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m'))
+    # ax2.xaxis.set_major_locator(mdates.MonthLocator())
+    # Eixo x sem marcacoes
+    ax2.tick_params(
+        axis        = 'x'   ,  # changes apply to the x-axis
+        which       = 'both',  # both major and minor ticks are affected
+        bottom      = False ,  # ticks along the bottom edge are off
+        top         = False ,  # ticks along the top edge are off
+        labelbottom = False )  # labels along the bottom edge are off
     # Ajuste de escalas
     ax2.set_ylim(-1.0, 8.0)
     ax2.set_ylabel('Vazão [m³/s]')
@@ -161,8 +196,15 @@ def Routings(
     ax3.plot(observadoPonto.t[i:i + 60], revCachoeira.D          , 'C0'  )  # Despachos nos primeiros 60 dias (azul)
     ax3.plot(observadoPonto.t[i:i + 60], upstreamAtibaiaCachoeira, 'C1--')  # Routings apos calibracao        (laranja)
 
-    ax3.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m'))
-    ax3.xaxis.set_major_locator(mdates.MonthLocator())
+    # ax3.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m'))
+    # ax3.xaxis.set_major_locator(mdates.MonthLocator())
+    # Eixo x sem marcacoes
+    ax3.tick_params(
+        axis        = 'x'   ,  # changes apply to the x-axis
+        which       = 'both',  # both major and minor ticks are affected
+        bottom      = False ,  # ticks along the bottom edge are off
+        top         = False ,  # ticks along the top edge are off
+        labelbottom = False )  # labels along the bottom edge are off
 
     # Ajuste de escalas
     ax3.set_ylim(-1.0, 8.0)
@@ -178,11 +220,15 @@ def Routings(
     box2.y1 = box2.y1 + 0.050
     ax3.set_position(box2)
 
+    ax1.set_title('Routing de montante de Valinhos para Atibaia' , fontsize = 10, loc = 'left')
+    ax2.set_title('Routing de montante de Atibaia para Atibainha', fontsize = 10, loc = 'left')
+    ax3.set_title('Routing de montante de Atibaia para Cachoeira', fontsize = 10, loc = 'left')
+
     # plt.show()
     fileName = str(i) + '.pdf'
     fig.savefig('/Users/raphael/Desktop/Programa de Mestrado/Projeto de pesquisa/Qualificação/Artigo/Resultados/3-R/' + fileName)
 
-def Despachos(observadoPonto1, demanda1, observadoPonto2, demanda2, decisao1, decisao2, resultado, step):
+def Despachos(observadoPonto1, demanda1, observadoPonto2, demanda2, decisao1, decisao2, resultado, step, flag):
     i = step
     n = 31
 
@@ -208,8 +254,15 @@ def Despachos(observadoPonto1, demanda1, observadoPonto2, demanda2, decisao1, de
     # Referencia no dia de decisao
     ax1.plot(observadoPonto2.t[i + 60]  , decisao2[60], 'bo' , alpha = 0.7)
 
-    ax1.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m'))
-    ax1.xaxis.set_major_locator(mdates.MonthLocator())
+    # ax1.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m'))
+    # ax1.xaxis.set_major_locator(mdates.MonthLocator())
+    # Eixo x sem marcacoes
+    ax1.tick_params(
+        axis        = 'x'   ,  # changes apply to the x-axis
+        which       = 'both',  # both major and minor ticks are affected
+        bottom      = False ,  # ticks along the bottom edge are off
+        top         = False ,  # ticks along the top edge are off
+        labelbottom = False )  # labels along the bottom edge are off
     # Ajuste de escalas
     ax1.set_ylim(-20.0, 40.0)
     ax1.set_xlabel('Dias')
@@ -231,7 +284,7 @@ def Despachos(observadoPonto1, demanda1, observadoPonto2, demanda2, decisao1, de
     pontos[step] = resultado
     ax2.scatter(t, pontos, color = 'C0', alpha = 0.5)
     # Ajuste de escalas
-    ax2.set_xlim( 1.0, 31.0)
+    ax2.set_xlim( 0.0, 32.0)
     ax2.set_ylim(-1.0, 40.0)
     ax2.set_xlabel('Dias')
     ax2.set_ylabel('Despacho [m³/s]')
@@ -241,6 +294,9 @@ def Despachos(observadoPonto1, demanda1, observadoPonto2, demanda2, decisao1, de
     box.y1 = box.y1 - 0.030
     ax2.set_position(box)
 
+    ax1.set_title('Routings de séries observadas (60 dias) + previstas (10 dias) e limites outorgados', fontsize = 10, loc = 'left')
+    ax2.set_title(f'Decisão de despacho em {flag}', fontsize = 10, loc = 'left')
+
     # plt.show()
     fileName = str(i) + '.pdf'
-    fig.savefig('/Users/raphael/Desktop/Programa de Mestrado/Projeto de pesquisa/Qualificação/Artigo/Resultados/2-D/' + fileName)
+    fig.savefig(f'/Users/raphael/Desktop/Programa de Mestrado/Projeto de pesquisa/Qualificação/Artigo/Resultados/2-D/{flag}/' + fileName)

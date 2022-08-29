@@ -225,7 +225,7 @@ def Modelo(
 
     # Condicoes de contorno para variaveis que serao calibradas
     bounds = [
-        [84.0,  99.0],                  # K (entre 3.5 e 6 dias)
+        [84.0,  99.0],                  # K (entre 3.5 e 4.1 dias)
         [ 0.2,   0.5],                  # X (necessario controlar limite inferior de X para que o modelo nao execute potenciacao complexa)
         [ 1.1,   1.2]                   # m (forcando o modelo a nao escolher m = 1)
     ]                                   #   (valores elevados de m tornam o hidrograma transladado uma linha reta, ou 'flat'. Necessario conter limite superior)
@@ -521,4 +521,5 @@ def Modelo(
 
     # 10. Geracao de graficos
     if flag == 'comGraficos':
-        Despachos(obsValinhos, 10, obsAtibaia, 2, decisVA, decisAA, resultado.Atibainha, step)
+        Despachos(obsValinhos, 10, obsAtibaia, 2, decisVA, decisAA, resultado.Atibainha, step, 'Atibainha')
+        Despachos(obsValinhos, 10, obsAtibaia, 2, decisVC, decisAC, resultado.Cachoeira, step, 'Cachoeira')
