@@ -11,13 +11,15 @@ from Dados.Classes   import *
 # |_ Atibainha/Cachoeira
 #    |_ Dia
 #    |_ Despacho
-# |_ Prev_(Mar/Abr)_(A/V)
+# |_ Previsao
 #    |_ Dia
-#    |_ Y2016
-#    |_ Y2017
-#    |_ Y2018
-#    |_ Y2019
-#    |_ Y2020
+#    |_ PrevD1
+#    |_ PrevD2
+#    |_ PrevD3
+#    |_ PrevD4
+#    |_ PrevD5
+#    |_ PrevD6
+#    |_ PrevD7
 def DBConnection(user, database, secao, tipo):
     try:
         connection = mysql.connector.connect(
@@ -63,27 +65,32 @@ def DBConnection(user, database, secao, tipo):
                 dados = Reservatorio(D = D, t = t)
                 return dados
 
-        # Query de previsao retorna amostras de chuvas de marco e abril de 2016 a 2020
+        # Query de previsao retorna dados de chuva previstos em uma janela de sete dias
+        # para os quatro primeiros meses de 2021
         else:
-            query = "SELECT * FROM " + tipo + " WHERE Ponto = %s"
-            cursor.execute(query, [secao])
+            query = "SELECT * FROM " + tipo
+            cursor.execute(query)
             # Vetores para armazenar dados lidos
-            t     = []
-            Y2016 = []
-            Y2017 = []
-            Y2018 = []
-            Y2019 = []
-            Y2020 = []
+            t  = []
+            D1 = []
+            D2 = []
+            D3 = []
+            D4 = []
+            D5 = []
+            D6 = []
+            D7 = []
 
             for row in cursor.fetchall():
                 t.append(row[1])
-                Y2016.append(row[2])
-                Y2017.append(row[3])
-                Y2018.append(row[4])
-                Y2019.append(row[5])
-                Y2020.append(row[6])
+                D1.append(row[2])
+                D2.append(row[3])
+                D3.append(row[4])
+                D4.append(row[5])
+                D5.append(row[6])
+                D6.append(row[7])
+                D7.append(row[8])
 
-            matrix = [t, Y2016, Y2017, Y2018, Y2019, Y2020]
+            matrix = [t, D1, D2, D3, D4, D5, D6, D7]
 
             previsao = Previsao(amostras = matrix)
             return previsao
