@@ -1,9 +1,9 @@
-# previous: solucoes obtidas durante iteracao anterior
-# current : solucoes obtidas durante iteracao atual
+# previous: soluções obtidas durante iteração anterior
+# current : soluções obtidas durante iteração atual
 def TesteDeConvergencia(previous, current):
-    # Diferencas; criterio: ser menor ou igual a 0.001
+    # Diferenças; critério: ser menor ou igual a 0.001
     # Importante: se o hidrograma de jusante conter valores nulos
-    # (o que de fato ocorrera em alguns casos dado o projeto), checar
+    # (o que de fato ocorrerá em alguns casos dado o projeto), checar
     # e simplesmente continuar
     for i in range(1, len(previous)):
         # Check de nulidade deve vir primeiro
@@ -17,18 +17,18 @@ def TesteDeConvergencia(previous, current):
 # O routing de jusante para montante
 # recebe um hidrograma de jusante (downstream)
 def UpstreamRouting(downstream, K, x, T):
-    # Iteracao
+    # Iteração
     k = 1
     # Estimativa inicial
     Ia = [0] * len(downstream)
     for i in range(len(downstream)):
         Ia[i] = downstream[i]
-    # Controle de convergencia
+    # Controle de convergência
     check = False
     # O peso alfa deve ser calibrado por tentativa e erro
     alfa = 0.4
 
-    # Loop ate convergencia
+    # Loop até convergência
     while not check:
         # Primeira estimativa
         oldI = Ia
@@ -38,11 +38,11 @@ def UpstreamRouting(downstream, K, x, T):
         for i in range(len(downstream)):
             S[i] = K * ((x * oldI[i]) + ((1 - x) * downstream[i]))
 
-        # Derivadas para primeiro e ultimo pontos
+        # Derivadas para primeiro e último pontos
         rateS    = [0] * len(oldI)
         rateS[0] = oldI[0] - downstream[0]
         rateS[len(downstream) - 1] = (S[len(downstream) - 1] - S[len(downstream) - 2]) / (2 * T)
-        # Loop para os intermediarios
+        # Loop para os intermediários
         for i in range(1, len(downstream) - 1):
             rateS[i] = (S[i + 1] - S[i - 1]) / (2 * T)
 
@@ -56,15 +56,15 @@ def UpstreamRouting(downstream, K, x, T):
         # Nova estimativa
         newI = [0] * len(oldI)
         for i in range(len(downstream)):
-            # Verifica se o dia em questao possui vazao para
-            # transportar; caso o dia nao possua, mantem 0
-            # if downstream[i] > 0 and smooth[i] > 0: # Essa condicao esta correta?
+            # Verifica se o dia em questão possui vazão para
+            # transportar; caso o dia não possua, mantém 0
+            # if downstream[i] > 0 and smooth[i] > 0: # Essa condição está correta?
             #     newI[i] = downstream[i] + smooth[i]
             # else:
             #     newI[i] = downstream[i]
             newI[i] = downstream[i] + smooth[i]
 
-        # Checagem de convergencia e atualizacao de estimativas
+        # Checagem de convergência e atualização de estimativas
         # com alfa
         check = TesteDeConvergencia(oldI, newI)
         if not check:

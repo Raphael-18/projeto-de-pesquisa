@@ -8,16 +8,16 @@ def DownstreamRouting(upstream, K, x, T):
 
     n = len(upstream)
     downstream = [0] * n
-    # Valor inicial de jusante e igual ao de montante
+    # Valor inicial de jusante é igual ao de montante
     downstream[0] = upstream[0]
-    # Loop entre segunda e ultima entradas
+    # Loop entre segunda e última entradas
     for i in range(1, n):
         downstream[i] = C0 * upstream[i] + C1 * upstream[i - 1] + C2 * downstream[i - 1]
 
     return downstream
 
-# Modelo nao-linear de Muskingum (de primeira ordem) com metodo de Runge-Kutta
-# de quarta ordem (routing de montante para jusante). Variaveis K, X e m devem
+# Modelo não-linear de Muskingum (de primeira ordem) com método de Runge-Kutta
+# de quarta ordem (routing de montante para jusante). Variáveis K, X e m devem
 # ser calibradas. I refere-se a input, ou hidrograma de montante, e T ao time step
 # envolvido (neste caso, 24 horas)
 def DownstreamFORK(K, X, m, T, I):

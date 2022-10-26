@@ -8,15 +8,15 @@ import numpy as np
 
 def Previsao(
         obsAtibaia   , obsValinhos   ,     # Chuvas observadas nos pontos (p/ calibrar TUin e EBin)
-        prevAtibaia  , prevValinhos  ,     # 30 dias observados + previsoes de 7 dias em cada bacia incremental
-        paramsAtibaia, paramsValinhos,     # Parametros calibrados com 4 meses de observacao
-        revAtibainha , revCachoeira  ,     # Despachos observados nos reservatorios (p/ calibrar TUin e EBin)
-        startAtibaia , startValinhos ,     # Dicionarios para armazenamento de parametros apos calibracao
+        prevAtibaia  , prevValinhos  ,     # Previsões de 7 dias em cada bacia incremental
+        paramsAtibaia, paramsValinhos,     # Parâmetros calibrados com 4 meses de observação
+        revAtibainha , revCachoeira  ,     # Despachos observados nos reservatórios (p/ calibrar TUin e EBin)
+        startAtibaia , startValinhos ,     # Dicionários para armazenamento de parâmetros após calibração
         Atibaia      , Valinhos      ,     # Bacias (dados p/ SMAP)
-        FO           , step                # Funcao objetivo p/ otimizacoes e variavel de controle de iteracoes
+        FO           , step                # Função objetivo p/ otimizações e variável de controle de iterações
 ):
-    # 1. Translado de vazoes observadas em Atibaia para calibrar TUin e EBin
-    # e invocar o modelo SMAP para previsao em Valinhos
+    # 1. Translado de vazões observadas em Atibaia para calibrar TUin e EBin
+    # e invocar o modelo SMAP para previsão em Valinhos
     bounds = [
         [0.0,  1.0],            # TUin
         [0.0, 40.0]             # EBin
@@ -24,39 +24,77 @@ def Previsao(
 
     n = len(obsAtibaia.Q)
 
-    # Routing de jusante nao linear de Atibaia para Valinhos
+    # Importante: após a primeira iteração, as vazões observadas em cada ponto de controle
+    # devem ser corrigidas com o despacho decidido anteriormente
+    # Primeiro:
+    # a) Routing de jusante não linear de Atibainha para Atibaia (#1) e de Cachoeira para Atibaia (#2)
+    Q1 = DownstreamFORK(
+        paramsAtibaia['K1'][0],
+        paramsAtibaia['X1'][0],
+        paramsAtibaia['m1'][0],
+        24.0, revAtibainha.D)
+    Q2 = DownstreamFORK(
+        paramsAtibaia['K2'][0],
+        paramsAtibaia['X2'][0],
+        paramsAtibaia['m2'][0],
+        24.0, revCachoeira.D)
+    # Depois:
+    # if step != 1:
+    #     # Em Atibaia
+    #     termoCV = SMAP(
+    #         paramsAtibaia['Str'] ,
+    #         paramsAtibaia['k2t'] ,
+    #         paramsAtibaia['Crec'],
+    #         startAtibaia['TUin'][step - 2], startAtibaia['EBin'][step - 2], obsAtibaia, Atibaia)
+    #     for i in range(n):
+    #         obsAtibaia.Q[i] = Q1[i] + Q2[i] + termoCV[i] - obsAtibaia.C[i]
+    #     # b) Routing de jusante não linear de Atibaia para Valinhos
+    #     Q = DownstreamFORK(
+    #         paramsValinhos['K'][0],
+    #         paramsValinhos['X'][0],
+    #         paramsValinhos['m'][0],
+    #         24.0, obsAtibaia.Q)
+    #     # Em Valinhos
+    #     termoCV = SMAP(
+    #         paramsValinhos['Str'] ,
+    #         paramsValinhos['k2t'] ,
+    #         paramsValinhos['Crec'],
+    #         startValinhos['TUin'][step - 2], startValinhos['EBin'][step - 2], obsValinhos, Valinhos)
+    #     for i in range(n):
+    #         obsValinhos.Q[i] = Q[i] + termoCV[i] - obsValinhos.C[i]
+
+    # Routing de jusante não linear de Atibaia para Valinhos
     Q = DownstreamFORK(
         paramsValinhos['K'][0],
         paramsValinhos['X'][0],
         paramsValinhos['m'][0],
-        24.0, obsAtibaia.Q
-    )
+        24.0, obsAtibaia.Q)
 
-    # Junto ao ponto de controle, a vazao observada equivale a uma parcela
-    # despachada de cada reservatorio mais uma parcela incremental de eventos chuvosos
-    # menos uma parcela captada entre as barragens e a propria secao
+    # Junto ao ponto de controle, a vazão observada equivale a uma parcela
+    # despachada de cada reservatório mais uma parcela incremental de eventos chuvosos
+    # menos uma parcela captada entre as barragens e a própria seção
     inc1 = [0] * n
     for j in range(n):
         inc1[j] = obsValinhos.Q[j] - Q[j] + obsValinhos.C[j]
 
-    # Funcao objetivo
+    # Função objetivo
     def objective(p):
-        # Sujeitos a calibracao
+        # Sujeitos a calibração
         TUin, EBin = p
 
-        # Segundo vetor incremental ("obs")
+        # Segundo vetor incremental ("calc")
         inc2 = SMAP(
             paramsValinhos['Str']  ,
             paramsValinhos['k2t']  ,
             paramsValinhos['Crec'] ,
             TUin, EBin, obsValinhos, Valinhos)
 
-        # Restricao positiva aos routings calculados e as vazoes incrementais
+        # Restrição positiva aos routings calculados e às vazões incrementais
         minQ = min(inc2)
         if minQ < 0:
             return np.inf
         else:
-            # Metrica utilizada para otimizacao
+            # Métrica utilizada para otimização
             match FO:
                 case 1:
                     # NSE: Nash-Sutcliffe
@@ -70,18 +108,18 @@ def Previsao(
                     # RMSE: Root-Mean-Square Error
                     return RMSE(inc1, inc2)
 
-    # Busca por evolucao diferencial
+    # Busca por evolução diferencial
     result = differential_evolution(objective, bounds, maxiter = 1000)
     # Resultados
     print()
     print('Step: %d' % step)
     print('SMAP em Valinhos:')
     print('Status: %s' % result['message'])
-    print('Avaliacoes realizadas: %d' % result['nfev'])
-    # Solucao
+    print('Avaliações realizadas: %d' % result['nfev'])
+    # Solução
     solution   = result['x']
     evaluation = objective(solution)
-    print('Solucao: \n'
+    print('Solução: \n'
           'f = ( \n'
           '\t[TUin = %.3f \n\t EBin = %.3f]'
           % (solution[0], solution[1]))
@@ -93,57 +131,47 @@ def Previsao(
     startValinhos['TUin'] += [solution[0]]
     startValinhos['EBin'] += [solution[1]]
 
-    # 2. Vetor de vazoes continuas (observado 30 dias + previsto 7 dias)
+    previsao1   = Ponto(C = [], P = [], Q = [], t = [])
+    previsao1.P = obsValinhos.P + prevValinhos.P
+    # 2. Vetor de vazões contínuas (observado 30 dias + previsto 7 dias)
     calcValinhos = SMAP(
             paramsValinhos['Str']  ,
             paramsValinhos['k2t']  ,
             paramsValinhos['Crec'] ,
-            solution[0], solution[1], prevValinhos, Valinhos)
+            solution[0], solution[1], previsao1, Valinhos)
 
     # 3. Translado de despachos observadas em Atibainha e Cachoeira para calibrar TUin e EBin
-    # e invocar o modelo SMAP para previsao em Atibaia
+    # e invocar o modelo SMAP para previsão em Atibaia
     bounds = [
         [0.0, 1.0],            # TUin
         [0.0, 9.2]             # EBin
     ]
-
-    # Routing de jusante nao linear de Atibainha para Atibaia (#1) e de Cachoeira para Atibaia (#2)
-    Q1 = DownstreamFORK(
-        paramsAtibaia['K1'][0],
-        paramsAtibaia['X1'][0],
-        paramsAtibaia['m1'][0],
-        24.0, revAtibainha.D)
-    Q2 = DownstreamFORK(
-        paramsAtibaia['K2'][0],
-        paramsAtibaia['X2'][0],
-        paramsAtibaia['m2'][0],
-        24.0, revCachoeira.D)
-
-    # Junto ao ponto de controle, a vazao observada equivale a uma parcela
-    # despachada de cada reservatorio mais uma parcela incremental de eventos chuvosos
-    # menos uma parcela captada entre as barragens e a propria secao
+    # Q1 e Q2 já calculados
+    # Junto ao ponto de controle, a vazão observada equivale a uma parcela
+    # despachada de cada reservatório mais uma parcela incremental de eventos chuvosos
+    # menos uma parcela captada entre as barragens e a própria seção
     inc1 = [0] * n
     for j in range(n):
         inc1[j] = obsAtibaia.Q[j] - (Q1[j] + Q2[j]) + obsAtibaia.C[j]
 
-    # Funcao objetivo
+    # Função objetivo
     def objective(p):
-        # Sujeitos a calibracao
+        # Sujeitos a calibração
         TUin, EBin = p
 
-        # Segundo vetor incremental ("obs")
+        # Segundo vetor incremental ("calc")
         inc2 = SMAP(
             paramsAtibaia['Str']  ,
             paramsAtibaia['k2t']  ,
             paramsAtibaia['Crec'] ,
             TUin, EBin, obsAtibaia, Atibaia)
 
-        # Restricao positiva aos routings calculados e as vazoes incrementais
+        # Restrição positiva aos routings calculados e às vazões incrementais
         minQ = min(inc2)
         if minQ < 0:
             return np.inf
         else:
-            # Metrica utilizada para otimizacao
+            # Métrica utilizada para otimização
             match FO:
                 case 1:
                     # NSE: Nash-Sutcliffe
@@ -157,17 +185,17 @@ def Previsao(
                     # RMSE: Root-Mean-Square Error
                     return RMSE(inc1, inc2)
 
-    # Busca por evolucao diferencial
+    # Busca por evolução diferencial
     result = differential_evolution(objective, bounds, maxiter=1000)
     # Resultados
     print()
     print('SMAP em Atibaia:')
     print('Status: %s' % result['message'])
-    print('Avaliacoes realizadas: %d' % result['nfev'])
-    # Solucao
+    print('Avaliações realizadas: %d' % result['nfev'])
+    # Solução
     solution   = result['x']
     evaluation = objective(solution)
-    print('Solucao: \n'
+    print('Solução: \n'
           'f = ( \n'
           '\t[TUin = %.3f \n\t EBin = %.3f]'
           % (solution[0], solution[1]))
@@ -179,33 +207,37 @@ def Previsao(
     startAtibaia['TUin'] += [solution[0]]
     startAtibaia['EBin'] += [solution[1]]
 
-    # 4. Vetor de vazoes continuas (observado 30 dias + previsto 7 dias)
+    previsao2   = Ponto(C = [], P = [], Q = [], t = [])
+    previsao2.P = obsAtibaia.P + prevAtibaia.P
+    # 4. Vetor de vazões contínuas (observado 30 dias + previsto 7 dias)
     calcAtibaia = SMAP(
         paramsAtibaia['Str'] ,
         paramsAtibaia['k2t'] ,
         paramsAtibaia['Crec'],
-        solution[0], solution[1], prevAtibaia, Atibaia)
+        solution[0], solution[1], previsao2, Atibaia)
 
-    # 5. Tomada de decisao:
-    # A serie de 30 dias de observacao + 7 dias de previsao em Valinhos sera transladada duas vezes,
-    # uma ate o reservatorio de Atibainha com os parametros calibrados por trecho (Valinhos - Atibaia e
-    # Atibaia - Atibainha) e outra ate o reservatorio de Cachoeira, de modo semelhante (Valinhos - Atibaia e
-    # Atibaia - Cachoeira). Ao chegar em cada barragem, os hidrogramas finais devem ser confrontados com a minima
-    # media diaria de Valinhos (10 m3/s) somada a media de captacao em seu periodo de observacao. Caso a ordenada em
-    # index = 31 (dia de decisao) seja inferior as demandas, o despacho necessario sera o deficit remanescente;
-    # caso contrario, despacha-se o minimo de 0.25 m3/s. Para Atibaia, o procedimento e o mesmo. Sua serie de 30 + 7
-    # sera retrocedida duas vezes, uma para cada barragem, e os hidrogramas finais serao comparados com a minima
-    # media diaria de 2 m3/s + media de captacao durante os primeiros 30 dias observados. Caso a ordenada em
-    # index = 31 (dia de decisao) seja inferior as demandas, o despacho necessario sera o deficit remanescente;
-    # caso contrario, despacha-se o minimo outorgado
+    # 5. Tomada de decisão:
+    # A série de 30 dias de observação + 7 dias de previsão em Valinhos será transladada duas vezes,
+    # uma até o reservatório de Atibainha com os parâmetros calibrados por trecho (Valinhos - Atibaia e
+    # Atibaia - Atibainha) e outra até o reservatório de Cachoeira, de modo semelhante (Valinhos - Atibaia e
+    # Atibaia - Cachoeira). Ao chegar em cada barragem, os hidrogramas finais devem ser confrontados com a mínima
+    # média diária de Valinhos (10 m3/s) somada à média de captação em seu período de observação. Caso a ordenada em
+    # index = 30 (dia de decisão) seja inferior às demandas, o despacho necessário será o déficit remanescente;
+    # caso contrário, despacha-se o mínimo de 0.25 m3/s. Para Atibaia, o procedimento é o mesmo. Sua série de 30 + 7
+    # será retrocedida duas vezes, uma para cada barragem, e os hidrogramas finais serão comparados com a mínima
+    # média diária de 2 m3/s + média de captação durante os primeiros 30 dias observados. Caso a ordenada em
+    # index = 30 (dia de decisão) seja inferior às demandas, o despacho necessário será o déficit remanescente;
+    # caso contrário, despacha-se o mínimo outorgado
 
-    # Routings ate barragens:
+    # Routings até barragens:
     decisV = UpstreamFORK(
         paramsValinhos['K'][1],
         paramsValinhos['X'][1],
         paramsValinhos['m'][1],
         24.0, calcValinhos
     )
+    # Valinhos recebe a contribuição de sua bacia mais a de Atibaia
+    decisV = np.add(decisV, calcAtibaia)
     # de Valinhos (pt. 1)
     decisVA = UpstreamFORK(
         paramsAtibaia['K1'][1],
@@ -235,24 +267,26 @@ def Previsao(
         24.0, list(np.multiply(calcAtibaia, 0.5))
     )
 
+    demanda1 = 0.5 * (10 + np.mean(obsValinhos.C))
+    demanda2 = 0.5 * ( 2 + np.mean(obsAtibaia.C ))
     # Em Atibainha
-    if decisVA[31] < 10 + np.mean(obsValinhos.C):
-        defic1 = 10 + np.mean(obsValinhos.C) - decisVA[31]
+    if decisVA[30] < demanda1:
+        defic1 = demanda1 - decisVA[31]
     else:
         defic1 = 0.25
-    if decisAA[31] <  2 + np.mean(obsAtibaia.C):
-        defic2 =  2 + np.mean(obsAtibaia.C)  - decisAA[31]
+    if decisAA[30] <  demanda2:
+        defic2 =  demanda2  - decisAA[31]
     else:
         defic2 = 0.25
     despAtibainha = max(defic1, defic2)
 
     # Em Cachoeira
-    if decisVC[31] < 10 + np.mean(obsValinhos.C):
-        defic1 = 10 + np.mean(obsValinhos.C) - decisVC[31]
+    if decisVC[30] < demanda1:
+        defic1 = demanda1 - decisVC[31]
     else:
         defic1 = 0.25
-    if decisAC[31] <  2 + np.mean(obsAtibaia.C):
-        defic2 =  2 + np.mean(obsAtibaia.C)  - decisAC[31]
+    if decisAC[30] <  demanda2:
+        defic2 =  demanda2  - decisAC[31]
     else:
         defic2 = 0.25
     despCachoeira = max(defic1, defic2)
@@ -262,4 +296,51 @@ def Previsao(
         Cachoeira = despCachoeira
     )
 
-    return resultado
+    # Depois de definir a decisão ao final de uma iteração, deve-se atualizar os vetores de
+    # despacho de cada reservatório para que o passo seguinte 'lembre-se' de seu antecessor.
+    # Descarta primeiro dia
+    revAtibainha.D.pop(0)
+    revCachoeira.D.pop(0)
+    # Adiciona última decisão
+    revAtibainha.D.append(despAtibainha)
+    revCachoeira.D.append(despCachoeira)
+
+    # Vazões observadas após decisão atual
+    # Em Atibaia
+    Q1 = DownstreamFORK(
+        paramsAtibaia['K1'][0],
+        paramsAtibaia['X1'][0],
+        paramsAtibaia['m1'][0],
+        24.0, revAtibainha.D)
+    Q2 = DownstreamFORK(
+        paramsAtibaia['K2'][0],
+        paramsAtibaia['X2'][0],
+        paramsAtibaia['m2'][0],
+        24.0, revCachoeira.D)
+    # Série recortada de previsão
+    previsao2.P = previsao2.P[1:31]
+    termoCV = SMAP(
+        paramsAtibaia['Str'],
+        paramsAtibaia['k2t'],
+        paramsAtibaia['Crec'],
+        startAtibaia['TUin'][step - 1], startAtibaia['EBin'][step - 1], previsao2, Atibaia)
+    for i in range(n):
+        obsAtibaia.Q[i] = Q1[i] + Q2[i] + termoCV[i] - np.mean(obsAtibaia.C)
+
+    # Em Valinhos
+    Q = DownstreamFORK(
+        paramsValinhos['K'][0],
+        paramsValinhos['X'][0],
+        paramsValinhos['m'][0],
+        24.0, obsAtibaia.Q)
+    # Série recortada de previsão
+    previsao1.P = previsao1.P[1:31]
+    termoCV = SMAP(
+        paramsValinhos['Str'],
+        paramsValinhos['k2t'],
+        paramsValinhos['Crec'],
+        startValinhos['TUin'][step - 1], startValinhos['EBin'][step - 1], previsao1, Valinhos)
+    for i in range(n):
+        obsValinhos.Q[i] = Q[i] + termoCV[i] - np.mean(obsValinhos.C)
+
+    return obsAtibaia.Q[29], obsValinhos.Q[29], resultado

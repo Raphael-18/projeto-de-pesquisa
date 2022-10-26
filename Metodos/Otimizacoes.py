@@ -1,6 +1,6 @@
 import numpy as np
 
-# 1. Funcoes objetivo utilizadas durante rotinas de calibracao:
+# Funções objetivo utilizadas durante rotinas de calibração:
 # NSE: Nash-Sutcliffe
 def NSE(obs, calc):
     a = 0

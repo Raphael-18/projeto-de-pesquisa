@@ -1,23 +1,23 @@
-# Parametros de calibracao:
-#   Str : capacidade de saturacao (mm)
-#   k2t : constante de recessao para o escoamento superficial (dias)
-#   Crec: recarga subterranea (%)
+# Parâmetros de calibração:
+#   Str : capacidade de saturação (mm)
+#   k2t : constante de recessão para o escoamento superficial (dias)
+#   Crec: recarga subterrânea (%)
 #   TUin: teor de umidade inicial (adimensional)
-#   EBin: escoamento basico inicial (m3/s)
+#   EBin: escoamento básico inicial (m3/s)
 def SMAP(Str, k2t, Crec, TUin, EBin, Ponto, Bacia):
     # Input
-    # AD: area de drenagem (km2)
+    # AD: área de drenagem (km2)
     n, AD = len(Ponto.P), Bacia.AD
 
-    # Inicializacao
+    # Inicialização
     Q = []
 
-    # Ai  : abstracao inicial (mm)
+    # Ai  : abstração inicial (mm)
     # Capc: capacidade de campo (%)
-    # kkt : constante de recessao para o escoamento basico (dias)
+    # kkt : constante de recessão para o escoamento básico (dias)
     Ai, Capc, kkt = Bacia.Ai, Bacia.Capc, Bacia.kkt
 
-    # Reservatorios em t = 0
+    # Reservatórios em t = 0
     RSolo = TUin * Str
     RSup  = 0.0
     RSub  = EBin / (1 - (0.5 ** (1 / kkt))) / AD * 86.4
@@ -32,7 +32,7 @@ def SMAP(Str, k2t, Crec, TUin, EBin, Ponto, Bacia):
         else:
             ES = 0.0
 
-        # Evapotranspiracao real
+        # Evapotranspiração real
         if (Ponto.P[i] - ES) > Ponto.EP:
             ER = Ponto.EP
         else:
@@ -44,7 +44,7 @@ def SMAP(Str, k2t, Crec, TUin, EBin, Ponto, Bacia):
         else:
             Rec = 0.0
 
-        # Atualiza reservatorio-solo
+        # Atualiza reservatório-solo
         RSolo += Ponto.P[i] - ES - ER - Rec
 
         if RSolo > Str:

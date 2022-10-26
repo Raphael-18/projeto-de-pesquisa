@@ -28,8 +28,8 @@ def DBConnection(user, database, secao, tipo):
         )
 
         cursor = connection.cursor()
-        # Query de calibracao retorna captacoes, chuvas, vazoes ou
-        # despachos (reservatorios) para os quatro primeiros meses de 2021
+        # Query de calibração retorna captações, chuvas, vazões ou
+        # despachos (reservatórios) para os quatro primeiros meses de 2021
         if tipo == 'Calibracao':
             query = "SELECT * FROM " + secao
             cursor.execute(query)
@@ -51,7 +51,7 @@ def DBConnection(user, database, secao, tipo):
                 # Objeto tipo 'Ponto'
                 dados = Ponto(C = C, P = P, Q = Q, t = t)
                 return dados
-            # Reservatorios
+            # Reservatórios
             else:
                 # Vetores para armazenar dados lidos
                 D = []
@@ -65,7 +65,7 @@ def DBConnection(user, database, secao, tipo):
                 dados = Reservatorio(D = D, t = t)
                 return dados
 
-        # Query de previsao retorna dados de chuva previstos em uma janela de sete dias
+        # Query de previsão retorna dados de chuva previstos em uma janela de sete dias
         # para os quatro primeiros meses de 2021
         else:
             query = "SELECT * FROM " + tipo
