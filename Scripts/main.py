@@ -14,12 +14,12 @@ start = timer()
 Atibaia = Bacia(
     AD   = 477,
     Capc = 0.5,
-    kkt  = 40.0
+    kkt  = 60.0
 )
 Valinhos = Bacia(
     AD   = 1074,
-    Capc = 0.4,
-    kkt  = 55.0
+    Capc = 0.5,
+    kkt  = 60.0
 )
 # Função objetivo para otimizações
 #  1: NSE: Nash-Sutcliffe
@@ -29,7 +29,12 @@ FO = 1
 # Tipo de simulação
 # 'Previsoes': com previsões meteorológicas
 # 'Bola de cristal': com precipitações observadas
-simulacao = 'Bola de cristal'
+flag = 2
+match flag:
+    case 1:
+        simulacao = 'Previsoes'
+    case 2:
+        simulacao = 'Bola de cristal'
 
 ######################################################################
 # ETAPA 2:

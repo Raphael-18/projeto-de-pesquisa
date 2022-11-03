@@ -24,10 +24,7 @@ def Previsao(
 
     n = len(obsAtibaia.Q)
 
-    # Importante: após a primeira iteração, as vazões observadas em cada ponto de controle
-    # devem ser corrigidas com o despacho decidido anteriormente
-    # Primeiro:
-    # a) Routing de jusante não linear de Atibainha para Atibaia (#1) e de Cachoeira para Atibaia (#2)
+    # Routing de jusante não linear de Atibainha para Atibaia (#1) e de Cachoeira para Atibaia (#2)
     Q1 = DownstreamFORK(
         paramsAtibaia['K1'][0],
         paramsAtibaia['X1'][0],
@@ -38,31 +35,6 @@ def Previsao(
         paramsAtibaia['X2'][0],
         paramsAtibaia['m2'][0],
         24.0, revCachoeira.D)
-    # Depois:
-    # if step != 1:
-    #     # Em Atibaia
-    #     termoCV = SMAP(
-    #         paramsAtibaia['Str'] ,
-    #         paramsAtibaia['k2t'] ,
-    #         paramsAtibaia['Crec'],
-    #         startAtibaia['TUin'][step - 2], startAtibaia['EBin'][step - 2], obsAtibaia, Atibaia)
-    #     for i in range(n):
-    #         obsAtibaia.Q[i] = Q1[i] + Q2[i] + termoCV[i] - obsAtibaia.C[i]
-    #     # b) Routing de jusante não linear de Atibaia para Valinhos
-    #     Q = DownstreamFORK(
-    #         paramsValinhos['K'][0],
-    #         paramsValinhos['X'][0],
-    #         paramsValinhos['m'][0],
-    #         24.0, obsAtibaia.Q)
-    #     # Em Valinhos
-    #     termoCV = SMAP(
-    #         paramsValinhos['Str'] ,
-    #         paramsValinhos['k2t'] ,
-    #         paramsValinhos['Crec'],
-    #         startValinhos['TUin'][step - 2], startValinhos['EBin'][step - 2], obsValinhos, Valinhos)
-    #     for i in range(n):
-    #         obsValinhos.Q[i] = Q[i] + termoCV[i] - obsValinhos.C[i]
-
     # Routing de jusante não linear de Atibaia para Valinhos
     Q = DownstreamFORK(
         paramsValinhos['K'][0],
@@ -324,8 +296,9 @@ def Previsao(
         paramsAtibaia['k2t'],
         paramsAtibaia['Crec'],
         startAtibaia['TUin'][step - 1], startAtibaia['EBin'][step - 1], previsao2, Atibaia)
-    for i in range(n):
-        obsAtibaia.Q[i] = Q1[i] + Q2[i] + termoCV[i] - np.mean(obsAtibaia.C)
+    for i in range(0, n - 1, 1):
+        obsAtibaia.Q[i] = Q1[i] + Q2[i] + termoCV[i] - obsAtibaia.C[i]
+    obsAtibaia.Q[n - 1] = Q1[n - 1] + Q2[n - 1] + termoCV[n - 1] - np.mean(obsAtibaia.C)
 
     # Em Valinhos
     Q = DownstreamFORK(
@@ -340,7 +313,8 @@ def Previsao(
         paramsValinhos['k2t'],
         paramsValinhos['Crec'],
         startValinhos['TUin'][step - 1], startValinhos['EBin'][step - 1], previsao1, Valinhos)
-    for i in range(n):
-        obsValinhos.Q[i] = Q[i] + termoCV[i] - np.mean(obsValinhos.C)
+    for i in range(0, n - 1, 1):
+        obsValinhos.Q[i] = Q[i] + termoCV[i] - obsValinhos.C[i]
+    obsValinhos.Q[n - 1] = Q[n - 1] + termoCV[n - 1] - np.mean(obsValinhos.C)
 
     return obsAtibaia.Q[29], obsValinhos.Q[29], resultado

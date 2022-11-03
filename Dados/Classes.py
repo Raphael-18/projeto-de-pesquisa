@@ -17,14 +17,14 @@ class Decisao:
 
 # Classe para acomodar os dados de um ponto de controle e
 # permitir acessar informações de captação C, chuva P ou vazão Q.
-# As evapotranspirações potenciais diárias serão todas tomadas como 2.4 mm
+# As evapotranspirações potenciais diárias serão todas tomadas como 3.91 mm
 class Ponto:
     def __init__(self, C, P, Q, t):
         self.C = C
         self.P = P
         self.Q = Q
         self.t = t
-    EP = 2.4
+    EP = 3.91
 
 # Classe para acomodar os dados de um reservatório e
 # permitir acessar informações de despacho D
