@@ -2,16 +2,17 @@ import mysql.connector
 from mysql.connector import errorcode
 from Dados.Classes   import *
 
-# Banco de dados (user = test, db = Bacias):
+# Banco de dados (user = test, db = Dados):
 # |_ Atibaia/Valinhos
 #    |_ Dia
 #    |_ Precipitacao
 #    |_ Vazao
 #    |_ Captacao
+#    |_ Evapotranspiracao
 # |_ Atibainha/Cachoeira
 #    |_ Dia
 #    |_ Despacho
-# |_ Previsao
+# |_ Previsao_Atibaia/Valinhos
 #    |_ Dia
 #    |_ PrevD1
 #    |_ PrevD2
@@ -28,28 +29,30 @@ def DBConnection(user, database, secao, tipo):
         )
 
         cursor = connection.cursor()
-        # Query de calibração retorna captações, chuvas, vazões ou
-        # despachos (reservatórios) para os quatro primeiros meses de 2021
+        # Query de calibração retorna captações, chuvas, vazões, evapotranspirações ou
+        # despachos (reservatórios) para os 24 meses entre 2020 e 2021
         if tipo == 'Calibracao':
-            query = "SELECT * FROM " + secao
+            query = "SELECT * FROM " + secao + " WHERE ID BETWEEN 1 AND 720" # " WHERE ID BETWEEN 367 AND 486"
             cursor.execute(query)
 
             # Pontos de controle
             if secao == 'Atibaia' or secao == 'Valinhos':
                 # Vetores para armazenar dados lidos
                 C = []
+                E = []
                 P = []
                 Q = []
                 t = []
 
                 for row in cursor.fetchall():
                     C.append(row[4])
+                    E.append(row[5])
                     P.append(row[2])
                     Q.append(row[3])
                     t.append(row[1])
 
                 # Objeto tipo 'Ponto'
-                dados = Ponto(C = C, P = P, Q = Q, t = t)
+                dados = Ponto(C = C, E = E, P = P, Q = Q, t = t)
                 return dados
             # Reservatórios
             else:
@@ -66,9 +69,9 @@ def DBConnection(user, database, secao, tipo):
                 return dados
 
         # Query de previsão retorna dados de chuva previstos em uma janela de sete dias
-        # para os quatro primeiros meses de 2021
+        # de jan/20 a dez/21 (para que seja filtrado o período de 31/01/20 a 07/12/21)
         else:
-            query = "SELECT * FROM " + tipo
+            query = "SELECT * FROM " + tipo + " WHERE ID BETWEEN 1 AND 707" # " WHERE ID BETWEEN 367 AND 486"
             cursor.execute(query)
             # Vetores para armazenar dados lidos
             t  = []

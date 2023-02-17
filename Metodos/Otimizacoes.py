@@ -25,3 +25,10 @@ def RMSE(obs, calc):
     for i in range(n):
         a += (obs[i] - calc[i]) ** 2
     return np.sqrt(a / n)
+
+# KGE: Kling-Gupta
+def KGE(obs, calc):
+    r = np.corrcoef(obs, calc) # Correlação de Pearson
+    alfa = np.std(calc) / np.std(obs)
+    beta = np.mean(calc) / np.mean(obs)
+    return ((r[0, 1] - 1) ** 2 + (alfa - 1) ** 2 + (beta - 1) ** 2) ** 0.5

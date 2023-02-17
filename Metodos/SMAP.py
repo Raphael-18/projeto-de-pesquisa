@@ -33,10 +33,10 @@ def SMAP(Str, k2t, Crec, TUin, EBin, Ponto, Bacia):
             ES = 0.0
 
         # Evapotranspiração real
-        if (Ponto.P[i] - ES) > Ponto.EP:
-            ER = Ponto.EP
+        if (Ponto.P[i] - ES) > Ponto.E[i]:
+            ER = Ponto.E[i]
         else:
-            ER = Ponto.P[i] - ES + ((Ponto.EP - Ponto.P[i] + ES) * TU)
+            ER = Ponto.P[i] - ES + ((Ponto.E[i] - Ponto.P[i] + ES) * TU)
 
         # Recarga
         if RSolo > (Capc * Str):
