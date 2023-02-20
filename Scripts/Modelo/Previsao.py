@@ -36,7 +36,7 @@ def Previsao(
     # menos uma parcela captada entre as barragens e a própria seção.
     inc1 = [0] * n
     for j in range(n):
-        inc1[j] = obsValinhos.Q[j] - ((1 - paramsValinhos['Cp']) * Q[j]) + obsValinhos.C[j]
+        inc1[j] = obsValinhos.Q[j] - Q[j] + obsValinhos.C[j]
 
     # O objeto obsValinhos é passado ao modelo com 37 dados observados (para que seja possível
     # calcular a nova vazão observada ao final de cada previsão). Para calibrar o módulo SMAP com
@@ -79,7 +79,7 @@ def Previsao(
                     return KGE(inc1, inc2)
 
     # Busca por evolução diferencial
-    result = differential_evolution(objective, bounds, maxiter=1000)
+    result = differential_evolution(objective, bounds, maxiter=10)
     # Resultados
     # print()
     # print('Step: %d' % step)
@@ -135,7 +135,7 @@ def Previsao(
     # menos uma parcela captada entre as barragens e a própria seção.
     inc1 = [0] * n
     for j in range(n):
-        inc1[j] = obsAtibaia.Q[j] - ((1 - paramsAtibaia['Cp']) * (Q1[j] + Q2[j])) + obsAtibaia.C[j]
+        inc1[j] = obsAtibaia.Q[j] - (Q1[j] + Q2[j]) + obsAtibaia.C[j]
 
     # O objeto obsAtibaia é passado ao modelo com 37 dados observados (para que seja possível
     # calcular a nova vazão observada ao final da previsão). Para calibrar o módulo SMAP com
@@ -178,7 +178,7 @@ def Previsao(
                     return KGE(inc1, inc2)
 
     # Busca por evolução diferencial
-    result = differential_evolution(objective, bounds, maxiter=1000)
+    result = differential_evolution(objective, bounds, maxiter=10)
     # Resultados
     # print()
     # print('SMAP em Atibaia:')
@@ -263,121 +263,97 @@ def Previsao(
 
     # Se a vazão observada esperada, após a decisão, estiver abaixo da demanda, é
     # necessário adicionar a parcela faltante na "régua", despachar novamente e recalcular
-    atendido   = 0
-    adicionalA = 0
-    adicionalV = 0
+    atendido = 0
 
-    # Controle para atualizar o vetor de despachos com a decisão apenas uma vez.
-    # Caso seja necessário recalcular, a regra é substituir o último despacho e
-    # não "remover e andar" novamente
-    k = 0
+    # Controle para i) atualizar o vetor de despachos com a decisão apenas uma vez (caso
+    # seja necessário recalcular, a regra é substituir o último despacho e não "remover
+    # e andar" novamente) e ii) definir a demanda apenas para a primeira tentativa; depois, incrementar.
+    l = 0
 
     # Necessário recortar as precipitações para andar um dia ao verificar a vazão observada esperada
     obsAtibaia.C  = obsAtibaia.C[1:31]
     obsAtibaia.E  = obsAtibaia.E[1:31]
-    obsAtibaia.P  = obsAtibaia.P[1:31]
+    obsAtibaia.P  = obsAtibaia.P[1:31]  # + prevAtibaia.P[1:7]
     obsValinhos.C = obsValinhos.C[1:31]
     obsValinhos.E = obsValinhos.E[1:31]
-    obsValinhos.P = obsValinhos.P[1:31]
+    obsValinhos.P = obsValinhos.P[1:31] # + prevValinhos.P[1:7]
 
-    while not atendido:
-        demanda1 = 0.5 * (
-                10
-                + np.mean(obsValinhos.C)
-                + np.mean(obsAtibaia.C )
-                + (np.mean(revAtibainha.D) + np.mean(revCachoeira.D)) * (paramsAtibaia['Cp'] + paramsValinhos['Cp']))
-        demanda1 += adicionalV
-        demanda2 = 0.5 * (
-                2
-                + np.mean(obsAtibaia.C )
-                + (np.mean(revAtibainha.D) + np.mean(revCachoeira.D)) *  paramsAtibaia['Cp'])
-        demanda2 += adicionalA
+    # "Réguas"
+    demanda1 = 0.5 * (10 + np.mean(obsAtibaia.C) + np.mean(obsValinhos.C))
+    demanda2 = 0.5 * ( 2 + np.mean(obsAtibaia.C))
 
-        # Em Atibainha
-        if decisVA[30] < demanda1:
-            defic1 = demanda1 - decisVA[30]
-        else:
-            defic1 = 0.25
-        if decisAA[30] < demanda2:
-            defic2 = demanda2 - decisAA[30]
-        else:
-            defic2 = 0.25
-        despAtibainha = max(defic1, defic2)
+    # Em Atibainha
+    if decisVA[30] < demanda1:
+        defic1 = demanda1 - decisVA[30]
+    else:
+        defic1 = 0.25
+    if decisAA[30] < demanda2:
+        defic2 = demanda2 - decisAA[30]
+    else:
+        defic2 = 0.25
+    despAtibainha = max(defic1, defic2)
 
-        # Em Cachoeira
-        if decisVC[30] < demanda1:
-            defic1 = demanda1 - decisVC[30]
-        else:
-            defic1 = 0.25
-        if decisAC[30] < demanda2:
-            defic2 = demanda2 - decisAC[30]
-        else:
-            defic2 = 0.25
-        despCachoeira = max(defic1, defic2)
+    # Em Cachoeira
+    if decisVC[30] < demanda1:
+        defic1 = demanda1 - decisVC[30]
+    else:
+        defic1 = 0.25
+    if decisAC[30] < demanda2:
+        defic2 = demanda2 - decisAC[30]
+    else:
+        defic2 = 0.25
+    despCachoeira = max(defic1, defic2)
 
-        resultado = Decisao(
-            Atibainha = despAtibainha,
-            Cachoeira = despCachoeira
-        )
+    resultado = Decisao(
+        Atibainha = despAtibainha,
+        Cachoeira = despCachoeira
+    )
 
-        if k == 0:
-            # Depois de definir a decisão ao final de uma iteração, deve-se atualizar os vetores de
-            # despacho de cada reservatório para que o passo seguinte 'lembre-se' de seu antecessor.
-            # Descarta primeiro dia
-            revAtibainha.D.pop(0)
-            revCachoeira.D.pop(0)
-            # Adiciona última decisão
-            revAtibainha.D.append(despAtibainha)
-            revCachoeira.D.append(despCachoeira)
-        else:
-            revAtibainha.D[n - 1] = despAtibainha
-            revCachoeira.D[n - 1] = despCachoeira
+    # Depois de definir a decisão ao final de uma iteração, deve-se atualizar os vetores de
+    # despacho de cada reservatório para que o passo seguinte 'lembre-se' de seu antecessor.
+    # Descarta primeiro dia
+    revAtibainha.D.pop(0)
+    revCachoeira.D.pop(0)
+    # Adiciona últimas decisões
+    revAtibainha.D.append(despAtibainha)
+    revCachoeira.D.append(despCachoeira)
 
-        # Vazões observadas após decisão atual
-        # Em Atibaia
-        Q1 = DownstreamFORK(
-            paramsAtibaia['K1'][0],
-            paramsAtibaia['X1'][0],
-            paramsAtibaia['m1'][0],
-            24.0, revAtibainha.D)
-        Q2 = DownstreamFORK(
-            paramsAtibaia['K2'][0],
-            paramsAtibaia['X2'][0],
-            paramsAtibaia['m2'][0],
-            24.0, revCachoeira.D)
+    # Vazões observadas após decisão atual
+    # Em Atibaia
+    Q1 = DownstreamFORK(
+        paramsAtibaia['K1'][0],
+        paramsAtibaia['X1'][0],
+        paramsAtibaia['m1'][0],
+        24.0, revAtibainha.D)
+    Q2 = DownstreamFORK(
+        paramsAtibaia['K2'][0],
+        paramsAtibaia['X2'][0],
+        paramsAtibaia['m2'][0],
+        24.0, revCachoeira.D)
 
-        termoCV = SMAP(
-            paramsAtibaia['Str'],
-            paramsAtibaia['k2t'],
-            paramsAtibaia['Crec'],
-            startAtibaia['TUin'][step - 1], startAtibaia['EBin'][step - 1], obsAtibaia, Atibaia)
+    termoCVA = SMAP(
+        paramsAtibaia['Str'],
+        paramsAtibaia['k2t'],
+        paramsAtibaia['Crec'],
+        startAtibaia['TUin'][step - 1], startAtibaia['EBin'][step - 1], obsAtibaia, Atibaia)
 
-        for i in range(n):
-            obsAtibaia.Q[i] = ((Q1[i] + Q2[i]) * (1 - paramsAtibaia['Cp'])) + termoCV[i] - obsAtibaia.C[i]
+    for i in range(n):
+        obsAtibaia.Q[i] = (Q1[i] + Q2[i]) + termoCVA[i] - obsAtibaia.C[i]
 
-        # Em Valinhos
-        Q = DownstreamFORK(
-            paramsValinhos['K'][0],
-            paramsValinhos['X'][0],
-            paramsValinhos['m'][0],
-            24.0, obsAtibaia.Q)
+    # Em Valinhos
+    Q = DownstreamFORK(
+        paramsValinhos['K'][0],
+        paramsValinhos['X'][0],
+        paramsValinhos['m'][0],
+        24.0, obsAtibaia.Q)
 
-        termoCV = SMAP(
-            paramsValinhos['Str'],
-            paramsValinhos['k2t'],
-            paramsValinhos['Crec'],
-            startValinhos['TUin'][step - 1], startValinhos['EBin'][step - 1], obsValinhos, Valinhos)
+    termoCVV = SMAP(
+        paramsValinhos['Str'],
+        paramsValinhos['k2t'],
+        paramsValinhos['Crec'],
+        startValinhos['TUin'][step - 1], startValinhos['EBin'][step - 1], obsValinhos, Valinhos)
 
-        for i in range(n):
-            obsValinhos.Q[i] = (Q[i] * (1 - paramsValinhos['Cp'])) + termoCV[i] - obsValinhos.C[i]
-
-        if obsAtibaia.Q[29] < 2 or obsValinhos.Q[29] < 10:
-            k = 1
-            if obsAtibaia.Q[29] < 2:
-                adicionalA =  2 - obsAtibaia.Q[29]
-            if obsValinhos.Q[29] < 10:
-                adicionalV = 10 - obsValinhos.Q[29]
-        else:
-            atendido = 1
+    for i in range(n):
+        obsValinhos.Q[i] = Q[i] + termoCVV[i] - obsValinhos.C[i]
 
     return obsAtibaia.Q[29], obsValinhos.Q[29], resultado

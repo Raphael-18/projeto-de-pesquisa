@@ -31,12 +31,12 @@ FO = 1
 # Tipo de simulação
 # 'Previsoes'      : com previsões meteorológicas
 # 'Bola de cristal': com precipitações observadas
-flag = 1
+flag = 2
 match flag:
     case 1:
         simulacao = 'Previsoes'
     case 2:
-        simulacao = 'Bola de cristal'
+        simulacao = 'Observacoes'
 
 ######################################################################
 # ETAPA 2:
@@ -108,7 +108,10 @@ for j in tqdm(range(n), desc = "Previsão"):
 
     # 3.2. PREVISÃO
     # Atibaia
-    previsaoA = DBConnection('test', 'Dados', '', 'Previsao_Atibaia')
+    if flag == 1:
+        previsaoA = DBConnection('test', 'Dados', '', 'Previsao_Atibaia')
+    else:
+        previsaoA = DBConnection('test', 'Dados', '', 'P_Obs_Atibaia')
     # Slices nas previsões
     previsaoA.amostras[1] = previsaoA.amostras[1][i + 30]
     previsaoA.amostras[2] = previsaoA.amostras[2][i + 30]
@@ -122,7 +125,10 @@ for j in tqdm(range(n), desc = "Previsão"):
     for k in range(7):
         prevAtibaia.P.append(previsaoA.amostras[k + 1])
     # Valinhos
-    previsaoV = DBConnection('test', 'Dados', '', 'Previsao_Atibaia')
+    if flag == 1:
+        previsaoV = DBConnection('test', 'Dados', '', 'Previsao_Valinhos')
+    else:
+        previsaoV = DBConnection('test', 'Dados', '', 'P_Obs_Valinhos')
     # Slices nas previsões
     previsaoV.amostras[1] = previsaoV.amostras[1][i + 30]
     previsaoV.amostras[2] = previsaoV.amostras[2][i + 30]
