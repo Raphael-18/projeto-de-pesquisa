@@ -31,7 +31,7 @@ FO = 1
 # Tipo de simulação
 # 'Previsoes'      : com previsões meteorológicas
 # 'Bola de cristal': com precipitações observadas
-flag = 2
+flag = 1
 match flag:
     case 1:
         simulacao = 'Previsoes'

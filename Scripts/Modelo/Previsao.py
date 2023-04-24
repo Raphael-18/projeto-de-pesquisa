@@ -214,14 +214,13 @@ def Previsao(
     # uma até o reservatório de Atibainha com os parâmetros calibrados por trecho (Valinhos - Atibaia e
     # Atibaia - Atibainha) e outra até o reservatório de Cachoeira, de modo semelhante (Valinhos - Atibaia e
     # Atibaia - Cachoeira). Ao chegar em cada barragem, os hidrogramas finais devem ser confrontados com a mínima
-    # média diária de Valinhos (10 m3/s) somada à média de captação em seu período de observação e também à média
-    # de perdas após despacho durante a série observada (30 dias). Caso a ordenada em index = 30 (dia de decisão)
-    # seja inferior às demandas, o despacho necessário será o déficit remanescente; caso contrário, despacha-se o
-    # mínimo de 0.25 m3/s. Para Atibaia, o procedimento é o mesmo. Sua série de 30 + 7 será retrocedida duas vezes,
-    # uma para cada barragem, e os hidrogramas finais serão comparados com a mínima média diária de 2 m3/s + média de
-    # captação durante os primeiros 30 dias observados + média de perdas de despacho (despacho médio durante os
-    # 2 anos x coeficiente de perdas calibrado). Caso a ordenada em index = 30 (dia de decisão) seja inferior às
-    # demandas, o despacho necessário será o déficit remanescente; caso contrário, despacha-se o mínimo outorgado.
+    # média diária de Valinhos (10 m3/s) somada à média de captação em seu período de observação.
+    # Caso a ordenada em index = 30 (dia de decisão) seja inferior às demandas, o despacho necessário será
+    # o déficit remanescente; caso contrário, despacha-se o mínimo de 0.25 m3/s. Para Atibaia, o procedimento é o mesmo.
+    # Sua série de 30 + 7 será retrocedida duas vezes, uma para cada barragem, e os hidrogramas finais serão
+    # comparados com a mínima média diária de 2 m3/s + média de captação durante os primeiros 30 dias observados.
+    # Caso a ordenada em index = 30 (dia de decisão) seja inferior às demandas, o despacho necessário será o déficit
+    # remanescente; caso contrário, despacha-se o mínimo outorgado.
 
     # Routings até barragens:
     decisV = UpstreamFORK(
@@ -261,45 +260,39 @@ def Previsao(
         24.0, list(np.multiply(calcAtibaia, 0.5))
     )
 
-    # Se a vazão observada esperada, após a decisão, estiver abaixo da demanda, é
-    # necessário adicionar a parcela faltante na "régua", despachar novamente e recalcular
-    atendido = 0
-
-    # Controle para i) atualizar o vetor de despachos com a decisão apenas uma vez (caso
-    # seja necessário recalcular, a regra é substituir o último despacho e não "remover
-    # e andar" novamente) e ii) definir a demanda apenas para a primeira tentativa; depois, incrementar.
-    l = 0
-
     # Necessário recortar as precipitações para andar um dia ao verificar a vazão observada esperada
     obsAtibaia.C  = obsAtibaia.C[1:31]
     obsAtibaia.E  = obsAtibaia.E[1:31]
-    obsAtibaia.P  = obsAtibaia.P[1:31]  # + prevAtibaia.P[1:7]
+    obsAtibaia.P  = obsAtibaia.P[1:31]
     obsValinhos.C = obsValinhos.C[1:31]
     obsValinhos.E = obsValinhos.E[1:31]
-    obsValinhos.P = obsValinhos.P[1:31] # + prevValinhos.P[1:7]
+    obsValinhos.P = obsValinhos.P[1:31]
 
     # "Réguas"
     demanda1 = 0.5 * (10 + np.mean(obsAtibaia.C) + np.mean(obsValinhos.C))
     demanda2 = 0.5 * ( 2 + np.mean(obsAtibaia.C))
+    # Regra da média móvel de 15 dias
+    mediaA = 0.5 * ((( 3 - np.mean(obsAtibaia.C)) * 15) - np.sum(obsAtibaia.Q[16:30]))
+    mediaV = 0.5 * (((12 - np.mean(obsAtibaia.C) - np.mean(obsValinhos.C)) * 15) - np.sum(obsValinhos.Q[16:30]))
 
     # Em Atibainha
-    if decisVA[30] < demanda1:
-        defic1 = demanda1 - decisVA[30]
+    if decisVA[30] < mediaV:
+        defic1 = mediaV - decisVA[30]
     else:
         defic1 = 0.25
-    if decisAA[30] < demanda2:
-        defic2 = demanda2 - decisAA[30]
+    if decisAA[30] < mediaA:
+        defic2 = mediaA - decisAA[30]
     else:
         defic2 = 0.25
     despAtibainha = max(defic1, defic2)
 
     # Em Cachoeira
-    if decisVC[30] < demanda1:
-        defic1 = demanda1 - decisVC[30]
+    if decisVC[30] < mediaV:
+        defic1 = mediaV - decisVC[30]
     else:
         defic1 = 0.25
-    if decisAC[30] < demanda2:
-        defic2 = demanda2 - decisAC[30]
+    if decisAC[30] < mediaA:
+        defic2 = mediaA - decisAC[30]
     else:
         defic2 = 0.25
     despCachoeira = max(defic1, defic2)
