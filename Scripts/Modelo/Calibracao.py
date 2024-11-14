@@ -1,10 +1,11 @@
-from Metodos.Muskingum.Downstream import *  # TODO: Remover imports estrela *
-from Metodos.Muskingum.Upstream import *  # TODO: Remover imports estrela *
-from Metodos.SMAP import *  # TODO: Remover imports estrela *
-from Metodos.Otimizacoes import *  # TODO: Remover imports estrela *
-from scipy.optimize import differential_evolution
 import numpy as np
 import pandas as pd
+from scipy.optimize import differential_evolution
+
+from Metodos.SMAP import SMAP
+from Metodos.Muskingum.Upstream import UpstreamFORK
+from Metodos.Muskingum.Downstream import DownstreamFORK
+from Metodos.Otimizacoes import NSE, SSQ, RMSE, KGE
 
 
 def Calibracao(
@@ -27,18 +28,18 @@ def Calibracao(
     # introduzir um coeficiente Cp de perdas.
     # Condições de contorno para variáveis que serão calibradas:
     bounds = [
-        [1000.0, 2000.0],       # Str
-        [0.2,    4.0],       # k2t
-        [0.0,    1.0],       # Crec
-        [0.0,    1.0],       # TUin
-        [0.1,    9.2],       # EBin
-        [60.0,   80.0],       # K1 (entre 2.5 e 3.3 dias)
-        [0.2,    0.5],       # X1
-        [1.1,    1.3],       # m1 (forçando o modelo a não escolher m = 1)
-        [60.0,   80.0],       # K2 (entre 2.5 e 3.3 dias)
-        [0.2,    0.5],       # X2
-        [1.1,    1.3],       # m2 (forçando o modelo a não escolher m  = 1)
-        [0.1,    0.2]        # Cp (forçando o modelo a não escolher Cp = 0)
+        [1000.0, 2000.0],  # Str
+        [0.2, 4.0],  # k2t
+        [0.0, 1.0],  # Crec
+        [0.0, 1.0],  # TUin
+        [0.1, 9.2],  # EBin
+        [60.0, 80.0],  # K1 (entre 2.5 e 3.3 dias)
+        [0.2, 0.5],  # X1
+        [1.1, 1.3],  # m1 (forçando o modelo a não escolher m = 1)
+        [60.0, 80.0],  # K2 (entre 2.5 e 3.3 dias)
+        [0.2, 0.5],  # X2
+        [1.1, 1.3],  # m2 (forçando o modelo a não escolher m  = 1)
+        [0.1, 0.2]  # Cp (forçando o modelo a não escolher Cp = 0)
     ]
 
     n = len(obsAtibaia.Q)
@@ -250,10 +251,10 @@ def Calibracao(
 
     # Condições de contorno para variáveis que serão calibradas
     bounds = [
-        [84.0, 99.0],           # K (entre 3.5 e 4.1 dias)
+        [84.0, 99.0],  # K (entre 3.5 e 4.1 dias)
         # X (necessário controlar limite inferior de X para que o modelo não execute potenciação complexa)
         [0.2,  0.5],
-        [1.1,  1.2]            # m (forçando o modelo a não escolher m = 1)
+        [1.1,  1.2]  # m (forçando o modelo a não escolher m = 1)
     ]  # (valores elevados de m tornam o hidrograma transladado uma linha reta, ou 'flat'. Necessário conter limite superior)
 
     # Função objetivo
