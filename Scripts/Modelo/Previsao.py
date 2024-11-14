@@ -1,8 +1,8 @@
-from Dados.Classes import *
-from Metodos.Muskingum.Downstream import *
-from Metodos.Muskingum.Upstream import *
-from Metodos.SMAP import *
-from Metodos.Otimizacoes import *
+from Dados.Classes import *  # TODO: Remover imports estrela *
+from Metodos.Muskingum.Downstream import *  # TODO: Remover imports estrela *
+from Metodos.Muskingum.Upstream import *  # TODO: Remover imports estrela *
+from Metodos.SMAP import *  # TODO: Remover imports estrela *
+from Metodos.Otimizacoes import *  # TODO: Remover imports estrela *
 from scipy.optimize import differential_evolution
 import numpy as np
 
@@ -10,20 +10,20 @@ import numpy as np
 def Previsao(
         # Chuvas observadas nos pontos (p/ calibrar TUin e EBin)
         obsAtibaia, obsValinhos,
-        prevAtibaia, prevValinhos,     # Previsões de 7 dias em cada bacia incremental
-        paramsAtibaia, paramsValinhos,     # Parâmetros calibrados com 2 anos de observação
+        prevAtibaia, prevValinhos,  # Previsões de 7 dias em cada bacia incremental
+        paramsAtibaia, paramsValinhos,  # Parâmetros calibrados com 2 anos de observação
         # Despachos observados nos reservatórios (p/ calibrar TUin e EBin)
         revAtibainha, revCachoeira,
         # Dicionários para armazenamento de parâmetros após calibração
         startAtibaia, startValinhos,
-        Atibaia, Valinhos,     # Bacias (dados p/ SMAP)
-        FO, step                # Função objetivo p/ otimizações e variável de controle de iterações
+        Atibaia, Valinhos,  # Bacias (dados p/ SMAP)
+        FO, step  # Função objetivo p/ otimizações e variável de controle de iterações
 ):
     # 1. Translado de vazões observadas em Atibaia para calibrar TUin e EBin
     # e invocar o modelo SMAP para previsão em Valinhos
     bounds = [
-        [0.0,  1.0],            # TUin
-        [0.1, 40.0]             # EBin
+        [0.0,  1.0],  # TUin
+        [0.1, 40.0]  # EBin
     ]
 
     n = len(obsAtibaia.Q)

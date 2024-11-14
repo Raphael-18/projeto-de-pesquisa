@@ -1,7 +1,7 @@
-from Metodos.Muskingum.Downstream import *
-from Metodos.Muskingum.Upstream import *
-from Metodos.SMAP import *
-from Metodos.Otimizacoes import *
+from Metodos.Muskingum.Downstream import *  # TODO: Remover imports estrela *
+from Metodos.Muskingum.Upstream import *  # TODO: Remover imports estrela *
+from Metodos.SMAP import *  # TODO: Remover imports estrela *
+from Metodos.Otimizacoes import *  # TODO: Remover imports estrela *
 from scipy.optimize import differential_evolution
 import numpy as np
 import pandas as pd

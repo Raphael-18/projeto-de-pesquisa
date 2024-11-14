@@ -1,6 +1,8 @@
-# O routing de montante para jusante
-# recebe um hidrograma de montante (upstream)
 def DownstreamRouting(upstream, K, x, T):
+    """
+    O routing de montante para jusante
+    recebe um hidrograma de montante (upstream)
+    """
     # Coeficientes
     C0 = (T - (2 * K * x)) / ((2 * K * (1 - x)) + T)
     C1 = (T + (2 * K * x)) / ((2 * K * (1 - x)) + T)
@@ -17,13 +19,15 @@ def DownstreamRouting(upstream, K, x, T):
 
     return downstream
 
-# Modelo não-linear de Muskingum (de primeira ordem) com método de Runge-Kutta
-# de quarta ordem (routing de montante para jusante). Variáveis K, X e m devem
-# ser calibradas. I refere-se a input, ou hidrograma de montante, e T ao time step
-# envolvido (neste caso, 24 horas)
-
 
 def DownstreamFORK(K, X, m, T, I):
+    """
+    Modelo não-linear de Muskingum (de primeira ordem) com método de Runge-Kutta
+    de quarta ordem (routing de montante para jusante). Variáveis K, X e m devem
+    ser calibradas. I refere-se a input, ou hidrograma de montante, e T ao time step
+    envolvido (neste caso, 24 horas)
+    """
+
     n = len(I)
 
     # Outflow

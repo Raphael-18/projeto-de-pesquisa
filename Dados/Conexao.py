@@ -1,6 +1,6 @@
 import mysql.connector
 from mysql.connector import errorcode
-from Dados.Classes import *
+from Dados.Classes import *  # TODO: Remover imports estrela *
 
 # Banco de dados (user = test, db = Dados):
 # |_ Atibaia/Valinhos

@@ -1,6 +1,6 @@
-from Dados.Conexao import *
-from Modelo.Calibracao import *
-from Modelo.Previsao import *
+from Dados.Conexao import *  # TODO: Remover imports estrela *
+from Modelo.Calibracao import *  # TODO: Remover imports estrela *
+from Modelo.Previsao import *  # TODO: Remover imports estrela *
 from numpy import trapz
 from timeit import default_timer as timer
 from tqdm import tqdm

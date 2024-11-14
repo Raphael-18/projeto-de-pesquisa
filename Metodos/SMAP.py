@@ -5,6 +5,24 @@
 #   TUin: teor de umidade inicial (adimensional)
 #   EBin: escoamento básico inicial (m3/s)
 def SMAP(Str, k2t, Crec, TUin, EBin, Ponto, Bacia):
+    """
+    Simulates the Soil Moisture Accounting Procedure (SMAP)
+    for hydrological modeling.
+    Parameters:
+    Str (float): Soil tension storage capacity (mm).
+    k2t (float): Recession constant for surface runoff (days).
+    Crec (float): Recharge coefficient (%).
+    TUin (float): Initial soil moisture content (mm).
+    EBin (float): Initial baseflow (mm).
+    Ponto (object): Object containing precipitation (P)
+    and evapotranspiration (E) data.
+    Bacia (object): Object containing basin characteristics
+    such as drainage area
+    (AD), initial abstraction (Ai), field capacity (Capc), and
+    baseflow recession constant (kkt).
+    Returns:
+    list: Simulated streamflow (Q) for each time step.
+    """
     # Input
     # AD: área de drenagem (km2)
     n, AD = len(Ponto.P), Bacia.AD
