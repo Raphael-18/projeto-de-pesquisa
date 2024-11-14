@@ -1,10 +1,14 @@
-# previous: soluções obtidas durante iteração anterior
-# current : soluções obtidas durante iteração atual
 def TesteDeConvergencia(previous, current):
-    # Diferenças; critério: ser menor ou igual a 0.001
-    # Importante: se o hidrograma de jusante conter valores nulos
-    # (o que de fato ocorrerá em alguns casos dado o projeto), checar
-    # e simplesmente continuar
+    """
+    previous: soluções obtidas durante iteração anterior
+    current : soluções obtidas durante iteração atual
+
+    Diferenças; critério: ser menor ou igual a 0.001
+    Importante: se o hidrograma de jusante conter valores nulos
+    (o que de fato ocorrerá em alguns casos dado o projeto), checar
+    e simplesmente continuar
+
+    """
     for i in range(1, len(previous)):
         # Check de nulidade deve vir primeiro
         if current[i] == 0 or abs((current[i] - previous[i]) / current[i]) <= 0.001:
@@ -14,11 +18,12 @@ def TesteDeConvergencia(previous, current):
 
     return True
 
-# O routing de jusante para montante
-# recebe um hidrograma de jusante (downstream)
-
 
 def UpstreamRouting(downstream, K, x, T):
+    """
+    O routing de jusante para montante
+    recebe um hidrograma de jusante (downstream)
+    """
     # Iteração
     k = 1
     # Estimativa inicial
@@ -78,13 +83,14 @@ def UpstreamRouting(downstream, K, x, T):
 
     return newI
 
-# Modelo nao-linear de Muskingum (de primeira ordem) com metodo de Runge-Kutta
-# de quarta ordem (routing de jusante para montante). Variaveis K, X e m devem
-# ser calibradas. O refere-se a output, ou hidrograma de jusante, e T ao time step
-# envolvido (neste caso, 24 horas)
-
 
 def UpstreamFORK(K, X, m, T, O):
+    """
+    Modelo nao-linear de Muskingum (de primeira ordem) com metodo de Runge-Kutta
+    de quarta ordem (routing de jusante para montante). Variaveis K, X e m devem
+    ser calibradas. O refere-se a output, ou hidrograma de jusante, e T ao time step
+    envolvido (neste caso, 24 horas)
+    """
     n = len(O)
 
     # Inflow
