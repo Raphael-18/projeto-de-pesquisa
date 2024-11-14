@@ -1,10 +1,11 @@
-from Dados.Classes import *  # TODO: Remover imports estrela *
-from Metodos.Muskingum.Downstream import *  # TODO: Remover imports estrela *
-from Metodos.Muskingum.Upstream import *  # TODO: Remover imports estrela *
-from Metodos.SMAP import *  # TODO: Remover imports estrela *
-from Metodos.Otimizacoes import *  # TODO: Remover imports estrela *
-from scipy.optimize import differential_evolution
 import numpy as np
+from scipy.optimize import differential_evolution
+
+from Dados.Classes import Ponto
+from Metodos.SMAP import SMAP
+from Metodos.Muskingum.Downstream import DownstreamFORK
+from Metodos.Muskingum.Upstream import UpstreamFORK
+from Metodos.Otimizacoes import NSE, RMSE, SSQ, KGE
 
 
 def Previsao(
@@ -272,9 +273,6 @@ def Previsao(
     obsValinhos.E = obsValinhos.E[1:31]
     obsValinhos.P = obsValinhos.P[1:31]
 
-    # "Réguas"
-    demanda1 = 0.5 * (10 + np.mean(obsAtibaia.C) + np.mean(obsValinhos.C))
-    demanda2 = 0.5 * (2 + np.mean(obsAtibaia.C))
     # Regra da média móvel de 15 dias
     mediaA = 0.5 * (((3 - np.mean(obsAtibaia.C)) * 15) -
                     np.sum(obsAtibaia.Q[16:30]))
