@@ -1,6 +1,7 @@
 import mysql.connector
 from mysql.connector import errorcode
-from Dados.Classes import *  # TODO: Remover imports estrela *
+
+from Dados.Classes import Reservatorio, Previsao, Ponto
 
 # Banco de dados (user = test, db = Dados):
 # |_ Atibaia/Valinhos
@@ -31,8 +32,9 @@ def DBConnection(user, database, secao, tipo):
         )
 
         cursor = connection.cursor()
-        # Query de calibração retorna captações, chuvas, vazões, evapotranspirações ou
-        # despachos (reservatórios) para os 24 meses entre 2020 e 2021
+        # Query de calibração retorna captações, chuvas, vazões,
+        # evapotranspirações ou despachos (reservatórios)
+        # para os 24 meses entre 2020 e 2021
         if tipo == 'Calibracao':
             # " WHERE ID BETWEEN 367 AND 486"
             query = "SELECT * FROM " + secao + " WHERE ID BETWEEN 1 AND 720"
@@ -71,8 +73,9 @@ def DBConnection(user, database, secao, tipo):
                 dados = Reservatorio(D=D, t=t)
                 return dados
 
-        # Query de previsão retorna dados de chuva previstos em uma janela de sete dias
-        # de jan/20 a dez/21 (para que seja filtrado o período de 31/01/20 a 07/12/21)
+        # Query de previsão retorna dados de chuva previstos]
+        # em uma janela de sete dias de jan/20 a dez/21 (para
+        # que seja filtrado o período de 31/01/20 a 07/12/21)
         else:
             # " WHERE ID BETWEEN 367 AND 486"
             query = "SELECT * FROM " + tipo + " WHERE ID BETWEEN 1 AND 707"
