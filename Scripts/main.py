@@ -1,10 +1,12 @@
+import pandas as pd
+from tqdm import tqdm
+from numpy import trapz
+from timeit import default_timer as timer
+
 from Dados.Conexao import *  # TODO: Remover imports estrela *
 from Modelo.Calibracao import *  # TODO: Remover imports estrela *
 from Modelo.Previsao import *  # TODO: Remover imports estrela *
-from numpy import trapz
-from timeit import default_timer as timer
-from tqdm import tqdm
-import pandas as pd
+
 
 # Início de cronometragem
 start = timer()
@@ -31,12 +33,12 @@ FO = 1
 # Tipo de simulação
 # 'Previsoes'      : com previsões meteorológicas
 # 'Bola de cristal': com precipitações observadas
+simulacao_dict = {
+    1: 'Previsoes',
+    2: 'Observacoes'
+}
 flag = 1
-match flag:
-    case 1:
-        simulacao = 'Previsoes'
-    case 2:
-        simulacao = 'Observacoes'
+simulacao = simulacao_dict.get(flag, 'Unknown')
 
 ######################################################################
 # ETAPA 2:
@@ -176,13 +178,15 @@ despAtibainha.D = despAtibainha.D[30:707]  # 59:90
 despCachoeira.D = despCachoeira.D[30:707]  # 59:90
 vrealAtibainha = trapz(despAtibainha.D, dx=1) * (86400 / 1000000.0)
 vrealCachoeira = trapz(despCachoeira.D, dx=1) * (86400 / 1000000.0)
-print()
-print('Volumes:\n'
-      'Calculado em Atibainha: %.3f hm3\n'
-      'Real em Atibainha: %.3f hm3\n'
-      'Calculado em Cachoeira: %.3f hm3\n'
-      'Real em Cachoeira: %.3f hm3\n'
-      % (volAtibainha, vrealAtibainha, volCachoeira, vrealCachoeira))
+
+print(
+    '\n'
+    'Volumes:\n'
+    f'Calculado em Atibainha: {volAtibainha:.3f} hm3\n'
+    f'Real em Atibainha: {vrealAtibainha:.3f} hm3\n'
+    f'Calculado em Cachoeira: {volCachoeira:.3f} hm3\n'
+    f'Real em Cachoeira: {vrealCachoeira:.3f} hm3\n'
+)
 
 # Fim de cronometragem
 end = timer()
