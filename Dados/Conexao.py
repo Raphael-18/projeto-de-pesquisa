@@ -1,6 +1,6 @@
 import mysql.connector
 from mysql.connector import errorcode
-from Dados.Classes   import *
+from Dados.Classes import *
 
 # Banco de dados (user = test, db = Dados):
 # |_ Atibaia/Valinhos
@@ -21,18 +21,21 @@ from Dados.Classes   import *
 #    |_ PrevD5
 #    |_ PrevD6
 #    |_ PrevD7
+
+
 def DBConnection(user, database, secao, tipo):
     try:
         connection = mysql.connector.connect(
-            user     = user,
-            database = database
+            user=user,
+            database=database
         )
 
         cursor = connection.cursor()
         # Query de calibração retorna captações, chuvas, vazões, evapotranspirações ou
         # despachos (reservatórios) para os 24 meses entre 2020 e 2021
         if tipo == 'Calibracao':
-            query = "SELECT * FROM " + secao + " WHERE ID BETWEEN 1 AND 720" # " WHERE ID BETWEEN 367 AND 486"
+            # " WHERE ID BETWEEN 367 AND 486"
+            query = "SELECT * FROM " + secao + " WHERE ID BETWEEN 1 AND 720"
             cursor.execute(query)
 
             # Pontos de controle
@@ -52,7 +55,7 @@ def DBConnection(user, database, secao, tipo):
                     t.append(row[1])
 
                 # Objeto tipo 'Ponto'
-                dados = Ponto(C = C, E = E, P = P, Q = Q, t = t)
+                dados = Ponto(C=C, E=E, P=P, Q=Q, t=t)
                 return dados
             # Reservatórios
             else:
@@ -65,16 +68,17 @@ def DBConnection(user, database, secao, tipo):
                     t.append(row[1])
 
                 # Objeto tipo 'Reservatorio'
-                dados = Reservatorio(D = D, t = t)
+                dados = Reservatorio(D=D, t=t)
                 return dados
 
         # Query de previsão retorna dados de chuva previstos em uma janela de sete dias
         # de jan/20 a dez/21 (para que seja filtrado o período de 31/01/20 a 07/12/21)
         else:
-            query = "SELECT * FROM " + tipo + " WHERE ID BETWEEN 1 AND 707" # " WHERE ID BETWEEN 367 AND 486"
+            # " WHERE ID BETWEEN 367 AND 486"
+            query = "SELECT * FROM " + tipo + " WHERE ID BETWEEN 1 AND 707"
             cursor.execute(query)
             # Vetores para armazenar dados lidos
-            t  = []
+            t = []
             D1 = []
             D2 = []
             D3 = []
@@ -95,7 +99,7 @@ def DBConnection(user, database, secao, tipo):
 
             matrix = [t, D1, D2, D3, D4, D5, D6, D7]
 
-            previsao = Previsao(amostras = matrix)
+            previsao = Previsao(amostras=matrix)
             return previsao
 
     except mysql.connector.Error as err:

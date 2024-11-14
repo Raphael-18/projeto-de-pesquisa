@@ -1,16 +1,18 @@
 from Metodos.Muskingum.Downstream import *
-from Metodos.Muskingum.Upstream   import *
-from Metodos.SMAP        import *
+from Metodos.Muskingum.Upstream import *
+from Metodos.SMAP import *
 from Metodos.Otimizacoes import *
-from scipy.optimize      import differential_evolution
-import numpy  as np
+from scipy.optimize import differential_evolution
+import numpy as np
 import pandas as pd
 
+
 def Calibracao(
-        obsAtibaia  , obsValinhos ,        # Captações, chuvas, vazões e evapotranspirações observadas nos pontos
-        revAtibainha, revCachoeira,        # Despachos observados nos reservatórios
-        Atibaia     , Valinhos    ,        # Bacias
-        FO                                 # Função objetivo p/ otimizações
+        # Captações, chuvas, vazões e evapotranspirações observadas nos pontos
+        obsAtibaia, obsValinhos,
+        revAtibainha, revCachoeira,  # Despachos observados nos reservatórios
+        Atibaia, Valinhos,  # Bacias
+        FO  # Função objetivo p/ otimizações
 ):
     # 1. Muskingum de jusante até o ponto de controle de Atibaia:
     # O modelo utilizará como parâmetros duas trincas de variáveis Muskingum
@@ -26,17 +28,17 @@ def Calibracao(
     # Condições de contorno para variáveis que serão calibradas:
     bounds = [
         [1000.0, 2000.0],       # Str
-        [   0.2,    4.0],       # k2t
-        [   0.0,    1.0],       # Crec
-        [   0.0,    1.0],       # TUin
-        [   0.1,    9.2],       # EBin
-        [  60.0,   80.0],       # K1 (entre 2.5 e 3.3 dias)
-        [   0.2,    0.5],       # X1
-        [   1.1,    1.3],       # m1 (forçando o modelo a não escolher m = 1)
-        [  60.0,   80.0],       # K2 (entre 2.5 e 3.3 dias)
-        [   0.2,    0.5],       # X2
-        [   1.1,    1.3],       # m2 (forçando o modelo a não escolher m  = 1)
-        [   0.1,    0.2]        # Cp (forçando o modelo a não escolher Cp = 0)
+        [0.2,    4.0],       # k2t
+        [0.0,    1.0],       # Crec
+        [0.0,    1.0],       # TUin
+        [0.1,    9.2],       # EBin
+        [60.0,   80.0],       # K1 (entre 2.5 e 3.3 dias)
+        [0.2,    0.5],       # X1
+        [1.1,    1.3],       # m1 (forçando o modelo a não escolher m = 1)
+        [60.0,   80.0],       # K2 (entre 2.5 e 3.3 dias)
+        [0.2,    0.5],       # X2
+        [1.1,    1.3],       # m2 (forçando o modelo a não escolher m  = 1)
+        [0.1,    0.2]        # Cp (forçando o modelo a não escolher Cp = 0)
     ]
 
     n = len(obsAtibaia.Q)
@@ -57,14 +59,15 @@ def Calibracao(
         # por infiltração entre os pontos.
         inc1 = [0] * n
         for j in range(n):
-            inc1[j] = obsAtibaia.Q[j] - ((1 - Cp) * (Q1[j] + Q2[j])) + obsAtibaia.C[j]
+            inc1[j] = obsAtibaia.Q[j] - \
+                ((1 - Cp) * (Q1[j] + Q2[j])) + obsAtibaia.C[j]
 
         # Segundo vetor incremental ("calc")
         inc2 = SMAP(Str, k2t, Crec, TUin, EBin, obsAtibaia, Atibaia)
 
         # Restrição positiva aos routings calculados e às vazões incrementais
         minQ1, minQ2 = min(Q1), min(Q2)
-        res1 , res2  = min(inc1), min(inc2)
+        res1, res2 = min(inc1), min(inc2)
         if minQ1 < 0 or minQ2 < 0 or res1 < 0 or res2 < 0:
             return np.inf
         else:
@@ -91,13 +94,13 @@ def Calibracao(
     print('Status: %s' % result['message'])
     print('Avaliações realizadas: %d' % result['nfev'])
     # Solução
-    solution   = result['x']
+    solution = result['x']
     evaluation = objective(solution)
     print('Solução: \n'
           'f = ( \n'
           '\t[Str = %.3f \n\t k2t = %.3f \n\t Crec = %.3f \n\t TUin = %.3f \n\t EBin = %.3f \n\t K1 = %.3f \n\t X1 = %.3f \n\t m1 = %.3f \n\t K2 = %.3f \n\t X2 = %.3f \n\t m2 = %.3f \n\t Cp = %.2f]'
           % (
-              solution[0], solution[1], solution[2] , solution[3], solution[4], solution[5], solution[6], solution[7],
+              solution[0], solution[1], solution[2], solution[3], solution[4], solution[5], solution[6], solution[7],
               solution[8], solution[9], solution[10], solution[11]))
     if FO == 1 or FO == 4:
         print(') = %.3f' % (1 - evaluation))
@@ -107,43 +110,47 @@ def Calibracao(
     # Armazenamento em dicionário para utilização durante etapa de previsão
     # (K, X e m com final 1 referem-se a Atibainha; aqueles com final 2 são de Cachoeira)
     paramsAtibaia = {
-        'Str' : solution[0]   ,
-        'k2t' : solution[1]   ,
-        'Crec': solution[2]   ,
-        'K1'  : [solution[5]] ,
-        'X1'  : [solution[6]] ,
-        'm1'  : [solution[7]] ,
-        'K2'  : [solution[8]] ,
-        'X2'  : [solution[9]] ,
-        'm2'  : [solution[10]],
-        'Cp'  : solution[11]
+        'Str': solution[0],
+        'k2t': solution[1],
+        'Crec': solution[2],
+        'K1': [solution[5]],
+        'X1': [solution[6]],
+        'm1': [solution[7]],
+        'K2': [solution[8]],
+        'X2': [solution[9]],
+        'm2': [solution[10]],
+        'Cp': solution[11]
     }
 
     # 2. Checagem de incrementais e conversão chuva-vazão para o período observado em Atibaia:
     # As incrementais são necessárias para averiguar como as vazões obtidas com os parâmetros calibrados
     # adequam-se aos dados "observados" (também advindos de uma calibração própria, devido à parcela de despacho).
-    newQ1 = DownstreamFORK(solution[5], solution[6], solution[7] , 24.0, revAtibainha.D)
-    newQ2 = DownstreamFORK(solution[8], solution[9], solution[10], 24.0, revCachoeira.D)
+    newQ1 = DownstreamFORK(
+        solution[5], solution[6], solution[7], 24.0, revAtibainha.D)
+    newQ2 = DownstreamFORK(
+        solution[8], solution[9], solution[10], 24.0, revCachoeira.D)
 
     incAtibaia = [0] * n
     for j in range(n):
-        incAtibaia[j] = obsAtibaia.Q[j] - ((1 - solution[11]) * (newQ1[j] + newQ2[j])) + obsAtibaia.C[j]
+        incAtibaia[j] = obsAtibaia.Q[j] - \
+            ((1 - solution[11]) * (newQ1[j] + newQ2[j])) + obsAtibaia.C[j]
 
-    calcAtibaia = SMAP(solution[0], solution[1], solution[2], solution[3], solution[4], obsAtibaia, Atibaia)
+    calcAtibaia = SMAP(solution[0], solution[1], solution[2],
+                       solution[3], solution[4], obsAtibaia, Atibaia)
 
     # 3. Muskingum de jusante até o ponto de controle de Valinhos:
     # Semelhante ao passo 1., porém com uma trinca de variáveis Muskingum (K, X, m) ao invés de duas.
     # Condições de contorno para variáveis que serão calibradas:
     bounds = [
         [1000.0, 2000.0],       # Str
-        [   0.2,    6.0],       # k2t
-        [   0.0,   20.0],       # Crec
-        [   0.0,    1.0],       # TUin
-        [   0.1,   40.0],       # EBin
-        [  60.0,  120.0],       # K (entre 2.5 e 5 dias)
-        [   0.2,    0.5],       # X
-        [   1.1,    1.3],       # m  (forçando o modelo a não escolher m  = 1)
-        [   0.1,    0.2]        # Cp (forçando o modelo a não escolher Cp = 0)
+        [0.2,    6.0],       # k2t
+        [0.0,   20.0],       # Crec
+        [0.0,    1.0],       # TUin
+        [0.1,   40.0],       # EBin
+        [60.0,  120.0],       # K (entre 2.5 e 5 dias)
+        [0.2,    0.5],       # X
+        [1.1,    1.3],       # m  (forçando o modelo a não escolher m  = 1)
+        [0.1,    0.2]        # Cp (forçando o modelo a não escolher Cp = 0)
     ]
 
     # Função objetivo
@@ -193,7 +200,7 @@ def Calibracao(
     print('Status: %s' % result['message'])
     print('Avaliações realizadas: %d' % result['nfev'])
     # Solução
-    solution   = result['x']
+    solution = result['x']
     evaluation = objective(solution)
     print('Solução: \n'
           'f = ( \n'
@@ -207,25 +214,28 @@ def Calibracao(
 
     # Armazenamento em dicionário para utilização durante etapa de previsão
     paramsValinhos = {
-        'Str' : solution[0]  ,
-        'k2t' : solution[1]  ,
-        'Crec': solution[2]  ,
-        'K'   : [solution[5]],
-        'X'   : [solution[6]],
-        'm'   : [solution[7]],
-        'Cp'  : solution[8]
+        'Str': solution[0],
+        'k2t': solution[1],
+        'Crec': solution[2],
+        'K': [solution[5]],
+        'X': [solution[6]],
+        'm': [solution[7]],
+        'Cp': solution[8]
     }
 
     # 4. Checagem de incrementais e conversão chuva-vazão para o período observado em Valinhos:
     # As incrementais são necessárias para averiguar como as vazões obtidas com os parâmetros calibrados
     # adequam-se aos dados "observados" (também advindos de uma calibração própria, devido à parcela de despacho).
-    newQ = DownstreamFORK(solution[5], solution[6], solution[7], 24.0, obsAtibaia.Q)
+    newQ = DownstreamFORK(solution[5], solution[6],
+                          solution[7], 24.0, obsAtibaia.Q)
 
     incValinhos = [0] * n
     for j in range(n):
-        incValinhos[j] = obsValinhos.Q[j] - ((1 - solution[8]) * newQ[j]) + obsValinhos.C[j]
+        incValinhos[j] = obsValinhos.Q[j] - \
+            ((1 - solution[8]) * newQ[j]) + obsValinhos.C[j]
 
-    calcValinhos = SMAP(solution[0], solution[1], solution[2], solution[3], solution[4], obsValinhos, Valinhos)
+    calcValinhos = SMAP(solution[0], solution[1], solution[2],
+                        solution[3], solution[4], obsValinhos, Valinhos)
 
     # 5. Muskingum de montante até o ponto de controle de Atibaia:
     # Depois de otimizar o módulo chuva-vazão para cada sub-bacia, é necessário tomar as
@@ -235,14 +245,16 @@ def Calibracao(
     # Portanto, convém retroceder Desp.Atib. e tomar como referência Qobs.Atib. para calibração.
     desp = [0] * n
     for j in range(n):
-        desp[j] = (obsValinhos.Q[j] + obsValinhos.C[j] - incValinhos[j]) / (1 - paramsValinhos['Cp'])
+        desp[j] = (obsValinhos.Q[j] + obsValinhos.C[j] -
+                   incValinhos[j]) / (1 - paramsValinhos['Cp'])
 
     # Condições de contorno para variáveis que serão calibradas
     bounds = [
         [84.0, 99.0],           # K (entre 3.5 e 4.1 dias)
-        [ 0.2,  0.5],           # X (necessário controlar limite inferior de X para que o modelo não execute potenciação complexa)
-        [ 1.1,  1.2]            # m (forçando o modelo a não escolher m = 1)
-    ]                           #   (valores elevados de m tornam o hidrograma transladado uma linha reta, ou 'flat'. Necessário conter limite superior)
+        # X (necessário controlar limite inferior de X para que o modelo não execute potenciação complexa)
+        [0.2,  0.5],
+        [1.1,  1.2]            # m (forçando o modelo a não escolher m = 1)
+    ]  # (valores elevados de m tornam o hidrograma transladado uma linha reta, ou 'flat'. Necessário conter limite superior)
 
     # Função objetivo
     def objective(p):
@@ -280,7 +292,7 @@ def Calibracao(
     print('Status: %s' % result['message'])
     print('Avaliações realizadas: %d' % result['nfev'])
     # Solução
-    solution   = result['x']
+    solution = result['x']
     evaluation = objective(solution)
     print('Solução: \n'
           'f = ( \n'
@@ -312,12 +324,13 @@ def Calibracao(
     # alfa = beta = 0.5.
     reserv = [0] * n
     for j in range(n):
-        reserv[j] = (obsAtibaia.Q[j] + obsAtibaia.C[j] - incAtibaia[j]) / (1 - paramsAtibaia['Cp'])
+        reserv[j] = (obsAtibaia.Q[j] + obsAtibaia.C[j] -
+                     incAtibaia[j]) / (1 - paramsAtibaia['Cp'])
 
     # Ajuste necessário para evitar exponenciação complexa por ordenada final de hidrograma próxima de 0
     minAtibainha = revAtibainha.D[n - 1]
     minCachoeira = revCachoeira.D[n - 1]
-    minReserv    = min(minAtibainha, minCachoeira)
+    minReserv = min(minAtibainha, minCachoeira)
     if reserv[n - 1] < minReserv:
         reserv[n - 1] = minReserv
 
@@ -326,9 +339,10 @@ def Calibracao(
 
     # Condições de contorno para variáveis que serão calibradas
     bounds = [
-        [120.0, 180.0],         # K (entre 5 e 7.5 dias)
-        [  0.4,   0.5],         # X (necessário controlar limite inferior para que o modelo não execute potenciação complexa)
-        [  1.1,   1.2]          # m (forçando o modelo a não escolher m = 1)
+        [120.0, 180.0],  # K (entre 5 e 7.5 dias)
+        # X (necessário controlar limite inferior para que o modelo não execute potenciação complexa)
+        [0.4,   0.5],
+        [1.1,   1.2]  # m (forçando o modelo a não escolher m = 1)
     ]
 
     # Função objetivo
@@ -367,7 +381,7 @@ def Calibracao(
     print('Status : %s' % result['message'])
     print('Avaliações realizadas: %d' % result['nfev'])
     # Solução
-    solution   = result['x']
+    solution = result['x']
     evaluation = objective(solution)
     print('Solução: \n'
           'f = ( \n'
@@ -379,7 +393,8 @@ def Calibracao(
         print(') = %.3f\n' % evaluation)
 
     # Armazenamento para plotagem
-    upAA = UpstreamFORK(solution[0], solution[1], solution[2], 24.0, list(np.multiply(reserv, alfa)))
+    upAA = UpstreamFORK(solution[0], solution[1], solution[2], 24.0, list(
+        np.multiply(reserv, alfa)))
 
     # Armazenamento em dicionário para utilização durante etapa de previsão
     paramsAtibaia['K1'] += [solution[0]]
@@ -392,8 +407,9 @@ def Calibracao(
     # Condições de contorno para variáveis que serão calibradas
     bounds = [
         [120.0, 180.0],         # K (entre 5 e 7.5 dias)
-        [  0.4,   0.5],         # X (necessário controlar limite inferior para que o modelo não execute potenciação complexa)
-        [  1.1,   1.3]          # m (forçando o modelo a não escolher m = 1)
+        # X (necessário controlar limite inferior para que o modelo não execute potenciação complexa)
+        [0.4,   0.5],
+        [1.1,   1.3]          # m (forçando o modelo a não escolher m = 1)
     ]
 
     # Função objetivo
@@ -432,7 +448,7 @@ def Calibracao(
     print('Status : %s' % result['message'])
     print('Avaliações realizadas: %d' % result['nfev'])
     # Solução
-    solution   = result['x']
+    solution = result['x']
     evaluation = objective(solution)
     print('Solução: \n'
           'f = ( \n'
@@ -444,27 +460,27 @@ def Calibracao(
         print(') = %.3f\n' % evaluation)
 
     # Armazenamento para plotagem
-    upAC = UpstreamFORK(solution[0], solution[1], solution[2], 24.0, list(np.multiply(reserv, beta)))
+    upAC = UpstreamFORK(solution[0], solution[1], solution[2], 24.0, list(
+        np.multiply(reserv, beta)))
 
     # Armazenamento em dicionário para utilização durante etapa de previsão
     paramsAtibaia['K2'] += [solution[0]]
     paramsAtibaia['X2'] += [solution[1]]
     paramsAtibaia['m2'] += [solution[2]]
 
-    resultados = pd.DataFrame(data =
-                              {
-                                  'Dia'              :  obsAtibaia.t,
-                                  'Pluv. de Atibaia' :  obsAtibaia.P,
-                                  'Pluv. de Valinhos': obsValinhos.P,
-                                  'Vazao de Atibaia' :  obsAtibaia.Q,
-                                  'Musk de Atibaia'  :  incAtibaia  ,
-                                  'SMAP de Atibaia'  :  calcAtibaia ,
-                                  'Vazao de Valinhos': obsValinhos.Q,
-                                  'Musk de Valinhos' :  incValinhos ,
-                                  'SMAP de Valinhos' :  calcValinhos,
-                                  'Upst. VA': upVA,
-                                  'Upst. AA': upAA,
-                                  'Upst. AC': upAC
-                              })
+    resultados = pd.DataFrame(data={
+        'Dia':  obsAtibaia.t,
+        'Pluv. de Atibaia': obsAtibaia.P,
+        'Pluv. de Valinhos': obsValinhos.P,
+        'Vazao de Atibaia': obsAtibaia.Q,
+        'Musk de Atibaia': incAtibaia,
+        'SMAP de Atibaia': calcAtibaia,
+        'Vazao de Valinhos': obsValinhos.Q,
+        'Musk de Valinhos': incValinhos,
+        'SMAP de Valinhos': calcValinhos,
+        'Upst. VA': upVA,
+        'Upst. AA': upAA,
+        'Upst. AC': upAC
+    })
 
     return paramsAtibaia, paramsValinhos, resultados

@@ -1,19 +1,23 @@
 from Dados.Classes import *
 from Metodos.Muskingum.Downstream import *
-from Metodos.Muskingum.Upstream   import *
-from Metodos.SMAP        import *
+from Metodos.Muskingum.Upstream import *
+from Metodos.SMAP import *
 from Metodos.Otimizacoes import *
-from scipy.optimize      import differential_evolution
+from scipy.optimize import differential_evolution
 import numpy as np
 
+
 def Previsao(
-        obsAtibaia   , obsValinhos   ,     # Chuvas observadas nos pontos (p/ calibrar TUin e EBin)
-        prevAtibaia  , prevValinhos  ,     # Previsões de 7 dias em cada bacia incremental
+        # Chuvas observadas nos pontos (p/ calibrar TUin e EBin)
+        obsAtibaia, obsValinhos,
+        prevAtibaia, prevValinhos,     # Previsões de 7 dias em cada bacia incremental
         paramsAtibaia, paramsValinhos,     # Parâmetros calibrados com 2 anos de observação
-        revAtibainha , revCachoeira  ,     # Despachos observados nos reservatórios (p/ calibrar TUin e EBin)
-        startAtibaia , startValinhos ,     # Dicionários para armazenamento de parâmetros após calibração
-        Atibaia      , Valinhos      ,     # Bacias (dados p/ SMAP)
-        FO           , step                # Função objetivo p/ otimizações e variável de controle de iterações
+        # Despachos observados nos reservatórios (p/ calibrar TUin e EBin)
+        revAtibainha, revCachoeira,
+        # Dicionários para armazenamento de parâmetros após calibração
+        startAtibaia, startValinhos,
+        Atibaia, Valinhos,     # Bacias (dados p/ SMAP)
+        FO, step                # Função objetivo p/ otimizações e variável de controle de iterações
 ):
     # 1. Translado de vazões observadas em Atibaia para calibrar TUin e EBin
     # e invocar o modelo SMAP para previsão em Valinhos
@@ -42,7 +46,7 @@ def Previsao(
     # calcular a nova vazão observada ao final de cada previsão). Para calibrar o módulo SMAP com
     # TUin e EBin é preciso copiar o objeto obsValinhos em uma nova instância e recortar o vetor
     # de precipitações.
-    instValinhos = Ponto(C = [], E = [], P = [], Q = [], t = [])
+    instValinhos = Ponto(C=[], E=[], P=[], Q=[], t=[])
     instValinhos.E = obsValinhos.E[0:30]
     instValinhos.P = obsValinhos.P[0:30]
 
@@ -53,8 +57,8 @@ def Previsao(
 
         # Segundo vetor incremental ("calc")
         inc2 = SMAP(
-            paramsValinhos['Str'] ,
-            paramsValinhos['k2t'] ,
+            paramsValinhos['Str'],
+            paramsValinhos['k2t'],
             paramsValinhos['Crec'],
             TUin, EBin, instValinhos, Valinhos)
 
@@ -101,7 +105,7 @@ def Previsao(
     startValinhos['TUin'] += [solution[0]]
     startValinhos['EBin'] += [solution[1]]
 
-    previsao1 = Ponto(C = [], E = [], P = [], Q = [], t = [])
+    previsao1 = Ponto(C=[], E=[], P=[], Q=[], t=[])
     previsao1.E = obsValinhos.E
     previsao1.P = obsValinhos.P[0:30] + prevValinhos.P
     # 2. Vetor de vazões contínuas (observado 30 dias + previsto 7 dias)
@@ -141,7 +145,7 @@ def Previsao(
     # calcular a nova vazão observada ao final da previsão). Para calibrar o módulo SMAP com
     # TUin e EBin é preciso copiar o objeto obsAtibaia em uma nova instância e recortar o vetor
     # de precipitações.
-    instAtibaia = Ponto(C = [], E = [], P = [], Q = [], t = [])
+    instAtibaia = Ponto(C=[], E=[], P=[], Q=[], t=[])
     instAtibaia.E = obsAtibaia.E[0:30]
     instAtibaia.P = obsAtibaia.P[0:30]
 
@@ -199,7 +203,7 @@ def Previsao(
     startAtibaia['TUin'] += [solution[0]]
     startAtibaia['EBin'] += [solution[1]]
 
-    previsao2 = Ponto(C = [], E = [], P = [], Q = [], t = [])
+    previsao2 = Ponto(C=[], E=[], P=[], Q=[], t=[])
     previsao2.E = obsAtibaia.E
     previsao2.P = obsAtibaia.P[0:30] + prevAtibaia.P
     # 4. Vetor de vazões contínuas (observado 30 dias + previsto 7 dias)
@@ -261,19 +265,21 @@ def Previsao(
     )
 
     # Necessário recortar as precipitações para andar um dia ao verificar a vazão observada esperada
-    obsAtibaia.C  = obsAtibaia.C[1:31]
-    obsAtibaia.E  = obsAtibaia.E[1:31]
-    obsAtibaia.P  = obsAtibaia.P[1:31]
+    obsAtibaia.C = obsAtibaia.C[1:31]
+    obsAtibaia.E = obsAtibaia.E[1:31]
+    obsAtibaia.P = obsAtibaia.P[1:31]
     obsValinhos.C = obsValinhos.C[1:31]
     obsValinhos.E = obsValinhos.E[1:31]
     obsValinhos.P = obsValinhos.P[1:31]
 
     # "Réguas"
     demanda1 = 0.5 * (10 + np.mean(obsAtibaia.C) + np.mean(obsValinhos.C))
-    demanda2 = 0.5 * ( 2 + np.mean(obsAtibaia.C))
+    demanda2 = 0.5 * (2 + np.mean(obsAtibaia.C))
     # Regra da média móvel de 15 dias
-    mediaA = 0.5 * ((( 3 - np.mean(obsAtibaia.C)) * 15) - np.sum(obsAtibaia.Q[16:30]))
-    mediaV = 0.5 * (((12 - np.mean(obsAtibaia.C) - np.mean(obsValinhos.C)) * 15) - np.sum(obsValinhos.Q[16:30]))
+    mediaA = 0.5 * (((3 - np.mean(obsAtibaia.C)) * 15) -
+                    np.sum(obsAtibaia.Q[16:30]))
+    mediaV = 0.5 * (((12 - np.mean(obsAtibaia.C) -
+                    np.mean(obsValinhos.C)) * 15) - np.sum(obsValinhos.Q[16:30]))
 
     # Em Atibainha
     if decisVA[30] < mediaV:
@@ -298,8 +304,8 @@ def Previsao(
     despCachoeira = max(defic1, defic2)
 
     resultado = Decisao(
-        Atibainha = despAtibainha,
-        Cachoeira = despCachoeira
+        Atibainha=despAtibainha,
+        Cachoeira=despCachoeira
     )
 
     # Depois de definir a decisão ao final de uma iteração, deve-se atualizar os vetores de

@@ -16,6 +16,8 @@ def TesteDeConvergencia(previous, current):
 
 # O routing de jusante para montante
 # recebe um hidrograma de jusante (downstream)
+
+
 def UpstreamRouting(downstream, K, x, T):
     # Iteração
     k = 1
@@ -39,15 +41,16 @@ def UpstreamRouting(downstream, K, x, T):
             S[i] = K * ((x * oldI[i]) + ((1 - x) * downstream[i]))
 
         # Derivadas para primeiro e último pontos
-        rateS    = [0] * len(oldI)
+        rateS = [0] * len(oldI)
         rateS[0] = oldI[0] - downstream[0]
-        rateS[len(downstream) - 1] = (S[len(downstream) - 1] - S[len(downstream) - 2]) / (2 * T)
+        rateS[len(downstream) - 1] = (S[len(downstream) - 1] -
+                                      S[len(downstream) - 2]) / (2 * T)
         # Loop para os intermediários
         for i in range(1, len(downstream) - 1):
             rateS[i] = (S[i + 1] - S[i - 1]) / (2 * T)
 
         # Smoothing
-        smooth    = [0] * len(oldI)
+        smooth = [0] * len(oldI)
         smooth[0] = rateS[0]
         smooth[len(downstream) - 1] = rateS[len(downstream) - 1]
         for i in range(1, len(downstream) - 1):
@@ -79,6 +82,8 @@ def UpstreamRouting(downstream, K, x, T):
 # de quarta ordem (routing de jusante para montante). Variaveis K, X e m devem
 # ser calibradas. O refere-se a output, ou hidrograma de jusante, e T ao time step
 # envolvido (neste caso, 24 horas)
+
+
 def UpstreamFORK(K, X, m, T, O):
     n = len(O)
 
@@ -95,12 +100,15 @@ def UpstreamFORK(K, X, m, T, O):
         S[i] = K * (X * I[i] + (1 - X) * O[i]) ** m
         # Coeficientes
         k1 = (1 / X) * ((S[i] / K) ** (1 / m) - O[i])
-        k2 = (1 / X) * (((S[i] + 0.5 * T * k1) / K) ** (1 / m) - (0.5 * (O[i] + O[i - 1])))
-        k3 = (1 / X) * (((S[i] + 0.5 * T * k2) / K) ** (1 / m) - (0.5 * (O[i] + O[i - 1])))
+        k2 = (1 / X) * (((S[i] + 0.5 * T * k1) / K)
+                        ** (1 / m) - (0.5 * (O[i] + O[i - 1])))
+        k3 = (1 / X) * (((S[i] + 0.5 * T * k2) / K)
+                        ** (1 / m) - (0.5 * (O[i] + O[i - 1])))
         k4 = (1 / X) * (((S[i] + 1.0 * T * k3) / K) ** (1 / m) - O[i - 1])
         # Armazenamento em t - 1 (passo anterior)
         S[i - 1] = S[i] - T * (k1 + 2 * k2 + 2 * k3 + k4) / 6
         # Inflow em t - 1 (passo anterior)
-        I[i - 1] = (1 / X) * ((S[i - 1] / K) ** (1 / m)) - ((1 - X) / X) * O[i - 1]
+        I[i - 1] = (1 / X) * ((S[i - 1] / K) ** (1 / m)) - \
+            ((1 - X) / X) * O[i - 1]
 
     return I
