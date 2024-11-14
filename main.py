@@ -1,52 +1,43 @@
+import os
+import configparser
+
+import numpy as np
 import pandas as pd
 from tqdm import tqdm
-from numpy import trapz
 from timeit import default_timer as timer
 
-from Dados.Conexao import *  # TODO: Remover imports estrela *
-from Modelo.Calibracao import *  # TODO: Remover imports estrela *
-from Modelo.Previsao import *  # TODO: Remover imports estrela *
+from Dados.Conexao import DBConnection
+from Dados.Classes import Bacia, Ponto
+from Scripts.Modelo.Calibracao import Calibracao
+from Scripts.Modelo.Previsao import Previsao
 
+config = configparser.ConfigParser()
+config.read('config.ini')
 
-# Início de cronometragem
 start = timer()
 
-######################################################################
-# ETAPA 1:
-# Inicialização de variáveis de interesse
-Atibaia = Bacia(
-    AD=477,
-    Capc=0.5,
-    kkt=60.0
-)
-Valinhos = Bacia(
-    AD=1074,
-    Capc=0.5,
-    kkt=60.0
-)
-# Função objetivo para otimizações
-#  1: NSE : Nash-Sutcliffe
-#  2: SSQ : Sum of Squares of Deviation
-#  3: RMSE: Root-Mean-Square Error
-#  4: KSE : Kling-Gupta
-FO = 1
-# Tipo de simulação
-# 'Previsoes'      : com previsões meteorológicas
-# 'Bola de cristal': com precipitações observadas
+# region Inicialização de variáveis de interesse
+Atibaia = Bacia(AD=477, Capc=0.5, kkt=60.0)
+Valinhos = Bacia(AD=1074, Capc=0.5, kkt=60.0)
+
+FO = int(config['ObjectiveFunction']['FO'])
+
 simulacao_dict = {
     1: 'Previsoes',
     2: 'Observacoes'
 }
-flag = 1
+
+flag = int(config['Simulation']['simulation_flag'])
 simulacao = simulacao_dict.get(flag, 'Unknown')
 
-######################################################################
-# ETAPA 2:
-# Calibração de variáveis hidrológicas e de routing (tradicional e inverso)
-# com dados observados
+# endregion Inicialização de variáveis de interesse
+
+# region Calibração de variáveis hidrológicas e de routing
 # Pontos de controle
+# TODO: Mudar de DBConnection para pandas.DataFrame e tratar np.nan
 obsAtibaia = DBConnection('test', 'Dados', 'Atibaia', 'Calibracao')
 obsValinhos = DBConnection('test', 'Dados', 'Valinhos', 'Calibracao')
+
 # Reservatórios
 revAtibainha = DBConnection('test', 'Dados', 'Atibainha', 'Calibracao')
 revCachoeira = DBConnection('test', 'Dados', 'Cachoeira', 'Calibracao')
@@ -57,17 +48,20 @@ paramsAtibaia, paramsValinhos, resultados = Calibracao(
     Atibaia, Valinhos,
     FO=FO
 )
-resultados.to_excel('Resultados/Calibracao.xlsx')
+resultados.to_excel(
+    os.path.join(config['ExportDirectory']['results'], 'Calibracao.xlsx'))
 print(resultados)
 
-######################################################################
+# endregion Calibração de variáveis hidrológicas e de routing
+
+# region Loop do método
 # ETAPA 3:
 # Loop para executar o modelo, fazendo slices em vetores de calibração,
 # para caminhar de 30 em 30 dias e escolhendo a cada iteração valores
 # de previsão de chuva de 7 dias
 
 # Dias a serem simulados
-n = 677  # 31
+n = int(config['Simulation']['simulation_days'])
 # Respostas
 despachos = {'Atibainha': [], 'Cachoeira': []}
 atendimentos = {'Atibaia': [], 'Valinhos': []}
@@ -83,6 +77,7 @@ for j in tqdm(range(n), desc="Previsão"):
     i = j  # + 29
     # 3.1. OBSERVAÇÃO
     # Pontos de controle (dados observados)
+
     dadosAtibaia = DBConnection('test', 'Dados', 'Atibaia', 'Calibracao')
     dadosValinhos = DBConnection('test', 'Dados', 'Valinhos', 'Calibracao')
     # Assinatura nos objetos a serem passados ao método de previsão
@@ -110,10 +105,9 @@ for j in tqdm(range(n), desc="Previsão"):
 
     # 3.2. PREVISÃO
     # Atibaia
-    if flag == 1:
-        previsaoA = DBConnection('test', 'Dados', '', 'Previsao_Atibaia')
-    else:
-        previsaoA = DBConnection('test', 'Dados', '', 'P_Obs_Atibaia')
+    type_prev = 'Previsao' if flag == 1 else 'P_Obs'
+    previsaoA = DBConnection('test', 'Dados', '', type_prev + '_Atibaia')
+
     # Slices nas previsões
     previsaoA.amostras[1] = previsaoA.amostras[1][i + 30]
     previsaoA.amostras[2] = previsaoA.amostras[2][i + 30]
@@ -127,10 +121,7 @@ for j in tqdm(range(n), desc="Previsão"):
     for k in range(7):
         prevAtibaia.P.append(previsaoA.amostras[k + 1])
     # Valinhos
-    if flag == 1:
-        previsaoV = DBConnection('test', 'Dados', '', 'Previsao_Valinhos')
-    else:
-        previsaoV = DBConnection('test', 'Dados', '', 'P_Obs_Valinhos')
+    previsaoV = DBConnection('test', 'Dados', '', type_prev + '_Valinhos')
     # Slices nas previsões
     previsaoV.amostras[1] = previsaoV.amostras[1][i + 30]
     previsaoV.amostras[2] = previsaoV.amostras[2][i + 30]
@@ -161,23 +152,28 @@ for j in tqdm(range(n), desc="Previsão"):
     atendimentos['Atibaia'] += [checkAtibaia]
     atendimentos['Valinhos'] += [checkValinhos]
 
-pd.DataFrame(data=despachos).to_excel('Resultados/Despachos.xlsx')
-pd.DataFrame(data=atendimentos).to_excel('Resultados/Atendimentos.xlsx')
-print()
+pd.DataFrame(data=despachos).to_excel(
+    os.path.join(config['ExportDirectory']['results'], 'Despachos.xlsx'))
+pd.DataFrame(data=atendimentos).to_excel(
+    os.path.join(config['ExportDirectory']['results'], 'Atendimentos.xlsx'))
+
+print('\nDespachos')
 print(pd.DataFrame(data=despachos))
-print()
+print('\nAtendimentos')
 print(pd.DataFrame(data=atendimentos))
 
 # Volumes descarregados
-volAtibainha = trapz(despachos['Atibainha'], dx=1) * (86400 / 1000000.0)
-volCachoeira = trapz(despachos['Cachoeira'], dx=1) * (86400 / 1000000.0)
+unit_factor = 86400 / 1_000_000.0
+volAtibainha = np.trapz(despachos['Atibainha'], dx=1) * unit_factor
+volCachoeira = np.trapz(despachos['Cachoeira'], dx=1) * unit_factor
 # Despachos reais
 despAtibainha = DBConnection('test', 'Dados', 'Atibainha', 'Calibracao')
 despCachoeira = DBConnection('test', 'Dados', 'Cachoeira', 'Calibracao')
+
 despAtibainha.D = despAtibainha.D[30:707]  # 59:90
 despCachoeira.D = despCachoeira.D[30:707]  # 59:90
-vrealAtibainha = trapz(despAtibainha.D, dx=1) * (86400 / 1000000.0)
-vrealCachoeira = trapz(despCachoeira.D, dx=1) * (86400 / 1000000.0)
+vrealAtibainha = np.trapz(despAtibainha.D, dx=1) * unit_factor
+vrealCachoeira = np.trapz(despCachoeira.D, dx=1) * unit_factor
 
 print(
     '\n'
@@ -188,6 +184,7 @@ print(
     f'Real em Cachoeira: {vrealCachoeira:.3f} hm3\n'
 )
 
-# Fim de cronometragem
 end = timer()
-print('Tempo de execução: %.3f s' % (end - start))
+print(f'Tempo de execução: {end - start:.3f} s')
+
+# endregion Loop do método
