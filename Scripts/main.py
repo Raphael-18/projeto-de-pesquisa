@@ -1,3 +1,9 @@
+import sys
+import os
+
+# Adiciona o diretório pai (o diretório acima de 'Scripts' e 'Dados') ao sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from Dados.Conexao     import *
 from Modelo.Calibracao import *
 from Modelo.Previsao   import *
@@ -43,11 +49,11 @@ match flag:
 # Calibração de variáveis hidrológicas e de routing (tradicional e inverso)
 # com dados observados
 # Pontos de controle
-obsAtibaia  = DBConnection('test', 'Dados', 'Atibaia' , 'Calibracao')
-obsValinhos = DBConnection('test', 'Dados', 'Valinhos', 'Calibracao')
+obsAtibaia  = DBConnection('root', 'JH_Article', 'Atibaia' , 'Calibracao')
+obsValinhos = DBConnection('root', 'JH_Article', 'Valinhos', 'Calibracao')
 # Reservatórios
-revAtibainha = DBConnection('test', 'Dados', 'Atibainha', 'Calibracao')
-revCachoeira = DBConnection('test', 'Dados', 'Cachoeira', 'Calibracao')
+revAtibainha = DBConnection('root', 'JH_Article', 'Atibainha', 'Calibracao')
+revCachoeira = DBConnection('root', 'JH_Article', 'Cachoeira', 'Calibracao')
 
 paramsAtibaia, paramsValinhos, resultados = Calibracao(
     obsAtibaia  , obsValinhos ,
@@ -55,7 +61,7 @@ paramsAtibaia, paramsValinhos, resultados = Calibracao(
     Atibaia     , Valinhos    ,
     FO = FO
 )
-resultados.to_excel('Resultados/Calibracao.xlsx')
+resultados.to_excel('C:/Users/rfp19/OneDrive/Documentos/GitHub/jh_article/projeto-de-pesquisa/Scripts/Resultados/Calibracao.xlsx')
 print(resultados)
 
 ######################################################################
@@ -81,8 +87,8 @@ for j in tqdm(range(n), desc = "Previsão"):
     i = j # + 29
     # 3.1. OBSERVAÇÃO
     # Pontos de controle (dados observados)
-    dadosAtibaia  = DBConnection('test', 'Dados', 'Atibaia' , 'Calibracao')
-    dadosValinhos = DBConnection('test', 'Dados', 'Valinhos', 'Calibracao')
+    dadosAtibaia  = DBConnection('root', 'JH_Article', 'Atibaia' , 'Calibracao')
+    dadosValinhos = DBConnection('root', 'JH_Article', 'Valinhos', 'Calibracao')
     # Assinatura nos objetos a serem passados ao método de previsão
     obsAtibaia.C  = dadosAtibaia.C
     obsAtibaia.E  = dadosAtibaia.E
@@ -109,9 +115,9 @@ for j in tqdm(range(n), desc = "Previsão"):
     # 3.2. PREVISÃO
     # Atibaia
     if flag == 1:
-        previsaoA = DBConnection('test', 'Dados', '', 'Previsao_Atibaia')
+        previsaoA = DBConnection('root', 'JH_Article', '', 'Previsao_Atibaia_Sim')
     else:
-        previsaoA = DBConnection('test', 'Dados', '', 'P_Obs_Atibaia')
+        previsaoA = DBConnection('root', 'JH_Article', '', 'P_Obs_Atibaia')
     # Slices nas previsões
     previsaoA.amostras[1] = previsaoA.amostras[1][i + 30]
     previsaoA.amostras[2] = previsaoA.amostras[2][i + 30]
@@ -126,9 +132,9 @@ for j in tqdm(range(n), desc = "Previsão"):
         prevAtibaia.P.append(previsaoA.amostras[k + 1])
     # Valinhos
     if flag == 1:
-        previsaoV = DBConnection('test', 'Dados', '', 'Previsao_Valinhos')
+        previsaoV = DBConnection('root', 'JH_Article', '', 'Previsao_Valinhos_Sim')
     else:
-        previsaoV = DBConnection('test', 'Dados', '', 'P_Obs_Valinhos')
+        previsaoV = DBConnection('root', 'JH_Article', '', 'P_Obs_Valinhos')
     # Slices nas previsões
     previsaoV.amostras[1] = previsaoV.amostras[1][i + 30]
     previsaoV.amostras[2] = previsaoV.amostras[2][i + 30]
@@ -159,8 +165,8 @@ for j in tqdm(range(n), desc = "Previsão"):
     atendimentos['Atibaia']  += [checkAtibaia]
     atendimentos['Valinhos'] += [checkValinhos]
 
-pd.DataFrame(data = despachos).to_excel('Resultados/Despachos.xlsx')
-pd.DataFrame(data = atendimentos).to_excel('Resultados/Atendimentos.xlsx')
+pd.DataFrame(data = despachos).to_excel('C:/Users/rfp19/OneDrive/Documentos/GitHub/jh_article/projeto-de-pesquisa/Scripts/Resultados/Despachos.xlsx')
+pd.DataFrame(data = atendimentos).to_excel('C:/Users/rfp19/OneDrive/Documentos/GitHub/jh_article/projeto-de-pesquisa/Scripts/Resultados/Atendimentos.xlsx')
 print()
 print(pd.DataFrame(data = despachos))
 print()
@@ -170,10 +176,10 @@ print(pd.DataFrame(data = atendimentos))
 volAtibainha = trapz(despachos['Atibainha'], dx = 1) * (86400 / 1000000.0)
 volCachoeira = trapz(despachos['Cachoeira'], dx = 1) * (86400 / 1000000.0)
 # Despachos reais
-despAtibainha = DBConnection('test', 'Dados', 'Atibainha', 'Calibracao')
-despCachoeira = DBConnection('test', 'Dados', 'Cachoeira', 'Calibracao')
-despAtibainha.D = despAtibainha.D[30:707] # 59:90
-despCachoeira.D = despCachoeira.D[30:707] # 59:90
+despAtibainha = DBConnection('root', 'JH_Article', 'Atibainha', 'Calibracao')
+despCachoeira = DBConnection('root', 'JH_Article', 'Cachoeira', 'Calibracao')
+despAtibainha.D = despAtibainha.D[2124:3586]
+despCachoeira.D = despCachoeira.D[2124:3586]
 vrealAtibainha = trapz(despAtibainha.D, dx = 1) * (86400 / 1000000.0)
 vrealCachoeira = trapz(despCachoeira.D, dx = 1) * (86400 / 1000000.0)
 print()

@@ -1,3 +1,5 @@
+import math
+
 # O routing de montante para jusante
 # recebe um hidrograma de montante (upstream)
 def DownstreamRouting(upstream, K, x, T):
@@ -43,4 +45,6 @@ def DownstreamFORK(K, X, m, T, I):
         # Outflow seguinte
         O[i + 1] = (1 / (1 - X)) * ((S[i + 1] / K) ** (1 / m) - X * I[i + 1])
 
-    return O
+        _ = [0 if math.isnan(x) else x for x in O]
+
+    return _

@@ -1,3 +1,5 @@
+import logging
+
 from Metodos.Muskingum.Downstream import *
 from Metodos.Muskingum.Upstream   import *
 from Metodos.SMAP        import *
@@ -5,6 +7,16 @@ from Metodos.Otimizacoes import *
 from scipy.optimize      import differential_evolution
 import numpy  as np
 import pandas as pd
+
+# Set up basic configuration
+logging.basicConfig(
+    level=logging.DEBUG,  # Set the default logging level
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",  # Log format
+    handlers=[
+        logging.FileHandler("app.log"),  # Log to a file
+        logging.StreamHandler()  # Also log to console
+    ]
+)
 
 def Calibracao(
         obsAtibaia  , obsValinhos ,        # Captações, chuvas, vazões e evapotranspirações observadas nos pontos
@@ -30,10 +42,10 @@ def Calibracao(
         [   0.0,    1.0],       # Crec
         [   0.0,    1.0],       # TUin
         [   0.1,    9.2],       # EBin
-        [  60.0,   80.0],       # K1 (entre 2.5 e 3.3 dias)
+        [  60.0,  120.0],       # K1 (entre 2.5 e 5 dias)
         [   0.2,    0.5],       # X1
         [   1.1,    1.3],       # m1 (forçando o modelo a não escolher m = 1)
-        [  60.0,   80.0],       # K2 (entre 2.5 e 3.3 dias)
+        [  60.0,  120.0],       # K2 (entre 2.5 e 5 dias)
         [   0.2,    0.5],       # X2
         [   1.1,    1.3],       # m2 (forçando o modelo a não escolher m  = 1)
         [   0.1,    0.2]        # Cp (forçando o modelo a não escolher Cp = 0)
@@ -57,10 +69,15 @@ def Calibracao(
         # por infiltração entre os pontos.
         inc1 = [0] * n
         for j in range(n):
-            inc1[j] = obsAtibaia.Q[j] - ((1 - Cp) * (Q1[j] + Q2[j])) + obsAtibaia.C[j]
+            try:
+                inc1[j] = obsAtibaia.Q[j] - ((1 - Cp) * (Q1[j] + Q2[j])) + obsAtibaia.C[j]
+            except:
+                pass
 
         # Segundo vetor incremental ("calc")
         inc2 = SMAP(Str, k2t, Crec, TUin, EBin, obsAtibaia, Atibaia)
+
+        print('Tentando calibrar...')
 
         # Restrição positiva aos routings calculados e às vazões incrementais
         minQ1, minQ2 = min(Q1), min(Q2)
@@ -84,7 +101,10 @@ def Calibracao(
                     return KGE(inc1, inc2)
 
     # Busca por evolução diferencial
-    result = differential_evolution(objective, bounds, maxiter=10)
+    result = differential_evolution(objective, bounds, maxiter=1)
+
+    logging.debug("Calibração concluída!")
+
     # Resultados
     print('Muskingum de jusante e SMAP')
     print('Atibaia:')
@@ -165,6 +185,8 @@ def Calibracao(
         # Segundo vetor incremental ("calc")
         inc2 = SMAP(Str, k2t, Crec, TUin, EBin, obsValinhos, Valinhos)
 
+        print('Tentando calibrar...')
+
         # Restrição positiva aos routings calculados e às vazões incrementais
         minQ, res1, res2 = min(Q), min(inc1), min(inc2)
         if minQ < 0 or res1 < 0 or res2 < 0:
@@ -186,7 +208,7 @@ def Calibracao(
                     return KGE(inc1, inc2)
 
     # Busca por evolução diferencial
-    result = differential_evolution(objective, bounds, maxiter=10)
+    result = differential_evolution(objective, bounds, maxiter=1)
     # Resultados
     print()
     print('Valinhos:')
@@ -273,7 +295,7 @@ def Calibracao(
                     return KGE(obsAtibaia.Q, Q)
 
     # Busca por evolução diferencial
-    result = differential_evolution(objective, bounds, maxiter=10)
+    result = differential_evolution(objective, bounds, maxiter=1)
     # Resultados
     print('Muskingum de montante')
     print('Valinhos:')
@@ -360,7 +382,7 @@ def Calibracao(
                     return KGE(revAtibainha.D, Q)
 
     # Busca por evolução diferencial
-    result = differential_evolution(objective, bounds, maxiter=10)
+    result = differential_evolution(objective, bounds, maxiter=1)
     # Resultados
     print('Muskingum de montante')
     print('Atibaia para Atibainha:')
@@ -425,7 +447,7 @@ def Calibracao(
                     return KGE(revCachoeira.D, Q)
 
     # Busca por evolução diferencial
-    result = differential_evolution(objective, bounds, maxiter=10)
+    result = differential_evolution(objective, bounds, maxiter=2)
     # Resultados
     print('Muskingum de montante')
     print('Atibaia para Cachoeira:')

@@ -2,7 +2,7 @@ import mysql.connector
 from mysql.connector import errorcode
 from Dados.Classes   import *
 
-# Banco de dados (user = test, db = Dados):
+# Banco de dados (user = root, db = JH_Article):
 # |_ Atibaia/Valinhos
 #    |_ Dia
 #    |_ Precipitacao
@@ -25,14 +25,15 @@ def DBConnection(user, database, secao, tipo):
     try:
         connection = mysql.connector.connect(
             user     = user,
-            database = database
+            database = database,
+            password = 'mysql'
         )
 
         cursor = connection.cursor()
         # Query de calibração retorna captações, chuvas, vazões, evapotranspirações ou
-        # despachos (reservatórios) para os 24 meses entre 2020 e 2021
+        # despachos (reservatórios) entre 01/01/2015 e 25/10/2020
         if tipo == 'Calibracao':
-            query = "SELECT * FROM " + secao + " WHERE ID BETWEEN 1 AND 720" # " WHERE ID BETWEEN 367 AND 486"
+            query = "SELECT * FROM " + secao + " WHERE ID BETWEEN 1 AND 2125"
             cursor.execute(query)
 
             # Pontos de controle
@@ -69,9 +70,9 @@ def DBConnection(user, database, secao, tipo):
                 return dados
 
         # Query de previsão retorna dados de chuva previstos em uma janela de sete dias
-        # de jan/20 a dez/21 (para que seja filtrado o período de 31/01/20 a 07/12/21)
+        # de 25/10/2020 a 25/10/2024
         else:
-            query = "SELECT * FROM " + tipo + " WHERE ID BETWEEN 1 AND 707" # " WHERE ID BETWEEN 367 AND 486"
+            query = "SELECT * FROM " + tipo + " WHERE ID BETWEEN 818 AND 2279"
             cursor.execute(query)
             # Vetores para armazenar dados lidos
             t  = []

@@ -1,3 +1,5 @@
+import math
+
 # previous: soluções obtidas durante iteração anterior
 # current : soluções obtidas durante iteração atual
 def TesteDeConvergencia(previous, current):
@@ -103,4 +105,6 @@ def UpstreamFORK(K, X, m, T, O):
         # Inflow em t - 1 (passo anterior)
         I[i - 1] = (1 / X) * ((S[i - 1] / K) ** (1 / m)) - ((1 - X) / X) * O[i - 1]
 
-    return I
+        _ = [0 if math.isnan(x) else x for x in I]
+
+    return _

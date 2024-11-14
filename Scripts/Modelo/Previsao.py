@@ -79,7 +79,7 @@ def Previsao(
                     return KGE(inc1, inc2)
 
     # Busca por evolução diferencial
-    result = differential_evolution(objective, bounds, maxiter=10)
+    result = differential_evolution(objective, bounds, maxiter=2)
     # Resultados
     # print()
     # print('Step: %d' % step)
@@ -178,7 +178,7 @@ def Previsao(
                     return KGE(inc1, inc2)
 
     # Busca por evolução diferencial
-    result = differential_evolution(objective, bounds, maxiter=10)
+    result = differential_evolution(objective, bounds, maxiter=2)
     # Resultados
     # print()
     # print('SMAP em Atibaia:')
