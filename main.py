@@ -6,7 +6,7 @@ import pandas as pd
 from tqdm import tqdm
 from timeit import default_timer as timer
 
-from Dados.Conexao import DBConnection
+# from Dados.Conexao import DBConnection
 from Dados.Classes import Bacia, Ponto
 from Scripts.Modelo.Calibracao import Calibracao
 from Scripts.Modelo.Previsao import Previsao
@@ -35,12 +35,51 @@ simulacao = simulacao_dict.get(flag, 'Unknown')
 # region Calibração de variáveis hidrológicas e de routing
 # Pontos de controle
 # TODO: Mudar de DBConnection para pandas.DataFrame e tratar np.nan
-obsAtibaia = DBConnection('test', 'Dados', 'Atibaia', 'Calibracao')
-obsValinhos = DBConnection('test', 'Dados', 'Valinhos', 'Calibracao')
+columns = {'Dia': 't',
+           'Precipitacao': 'P',
+           'Vazao': 'Q',
+           'Captacao': 'C',
+           'Evapotranspiracao': 'E'}
 
+
+def normalize_point(df) -> pd.DataFrame:
+    """
+    Função auxiliar para substituir classe
+    DBConnection por pandas.DataFrame.
+    """
+    columns = {'Dia': 't',
+               'Precipitacao': 'P',
+               'Vazao': 'Q',
+               'Captacao': 'C',
+               'Evapotranspiracao': 'E'}
+    df = df.rename(columns=columns)
+    df['t'] = pd.to_datetime(df['t'], format='%Y-%m-%d')
+
+    return df
+
+
+def normalize_reservoir(df) -> pd.DataFrame:
+    """
+    Função auxiliar para substituir classe
+    DBConnection por pandas.DataFrame.
+    """
+    columns = {'Dia': 't',
+               'Despacho': 'D'}
+    df = df.rename(columns=columns)
+    df['t'] = pd.to_datetime(df['t'], format='%Y-%m-%d')
+
+    return df
+
+
+obsAtibaia = pd.read_csv('DadosTabulares/Atibaia.csv')
+obsValinhos = pd.read_csv('DadosTabulares/Valinhos.csv')
+obsAtibaia = normalize_point(obsAtibaia)
+obsValinhos = normalize_point(obsValinhos)
 # Reservatórios
-revAtibainha = DBConnection('test', 'Dados', 'Atibainha', 'Calibracao')
-revCachoeira = DBConnection('test', 'Dados', 'Cachoeira', 'Calibracao')
+revAtibainha = pd.read_csv('DadosTabulares/Atibainha.csv')
+revCachoeira = pd.read_csv('DadosTabulares/Cachoeira.csv')
+revAtibainha = normalize_reservoir(revAtibainha)
+revCachoeira = normalize_reservoir(revCachoeira)
 
 paramsAtibaia, paramsValinhos, resultados = Calibracao(
     obsAtibaia, obsValinhos,
@@ -72,22 +111,23 @@ startV = {'TUin': [], 'EBin': []}
 # Loop para invocar o modelo e extrair uma decisão de cada dia
 for j in tqdm(range(n), desc="Previsão"):
     # Necessário conectar ao banco de dados a cada iteração para que
-    # ao fazer os slices não haja perda de informação (recorte em
+    # ao fazer os slices não haja p'erda de informação (recorte em
     # vetores modificados e não em vetores originais)
     i = j  # + 29
     # 3.1. OBSERVAÇÃO
     # Pontos de controle (dados observados)
 
-    dadosAtibaia = DBConnection('test', 'Dados', 'Atibaia', 'Calibracao')
-    dadosValinhos = DBConnection('test', 'Dados', 'Valinhos', 'Calibracao')
-    # Assinatura nos objetos a serem passados ao método de previsão
-    obsAtibaia.C = dadosAtibaia.C
-    obsAtibaia.E = dadosAtibaia.E
-    obsAtibaia.P = dadosAtibaia.P
-    obsValinhos.C = dadosValinhos.C
-    obsValinhos.E = dadosValinhos.E
-    obsValinhos.P = dadosValinhos.P
-    # Slices nos pontos de controle
+    # Por que carrega dnv?
+    # dadosAtibaia = DBConnection('test', 'Dados', 'Atibaia', 'Calibracao')
+    # dadosValinhos = DBConnection('test', 'Dados', 'Valinhos', 'Calibracao')
+    # # Assinatura nos objetos a serem passados ao método de previsão
+    # obsAtibaia.C = dadosAtibaia.C
+    # obsAtibaia.E = dadosAtibaia.E
+    # obsAtibaia.P = dadosAtibaia.P
+    # obsValinhos.C = dadosValinhos.C
+    # obsValinhos.E = dadosValinhos.E
+    # obsValinhos.P = dadosValinhos.P
+    # # Slices nos pontos de controle
     obsAtibaia.C = obsAtibaia.C[i:i + 37]
     obsAtibaia.E = obsAtibaia.E[i:i + 37]
     obsAtibaia.P = obsAtibaia.P[i:i + 37]
