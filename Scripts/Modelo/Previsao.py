@@ -1,7 +1,8 @@
 import numpy as np
+import pandas as pd
 from scipy.optimize import differential_evolution
 
-from Dados.Classes import Ponto
+from Dados.Classes import Ponto, Decisao
 from Metodos.SMAP import SMAP
 from Metodos.Muskingum.Downstream import DownstreamFORK
 from Metodos.Muskingum.Upstream import UpstreamFORK
@@ -31,17 +32,17 @@ def Previsao(
 
     # Routing de jusante não linear de Atibaia para Valinhos
     Q = DownstreamFORK(
-        paramsValinhos['K'][0],
-        paramsValinhos['X'][0],
-        paramsValinhos['m'][0],
+        Valinhos.K[0],
+        Valinhos.X[0],
+        Valinhos.m[0],
         24.0, obsAtibaia.Q)
 
     # Junto ao ponto de controle, a vazão observada equivale a uma parcela
     # despachada de cada reservatório mais uma parcela incremental de eventos chuvosos
     # menos uma parcela captada entre as barragens e a própria seção.
-    inc1 = [0] * n
-    for j in range(n):
-        inc1[j] = obsValinhos.Q[j] - Q[j] + obsValinhos.C[j]
+    inc1 = pd.DataFrame([0] * n)
+    Q = pd.DataFrame(Q)
+    inc1 = obsValinhos.Q - Q + obsValinhos.C
 
     # O objeto obsValinhos é passado ao modelo com 37 dados observados (para que seja possível
     # calcular a nova vazão observada ao final de cada previsão). Para calibrar o módulo SMAP com
@@ -125,22 +126,23 @@ def Previsao(
 
     # Routing de jusante não linear de Atibainha para Atibaia (#1) e de Cachoeira para Atibaia (#2)
     Q1 = DownstreamFORK(
-        paramsAtibaia['K1'][0],
-        paramsAtibaia['X1'][0],
-        paramsAtibaia['m1'][0],
+        Atibaia.K[0][0],
+        Atibaia.X[0][0],
+        Atibaia.m[0][0],
         24.0, revAtibainha.D)
     Q2 = DownstreamFORK(
-        paramsAtibaia['K2'][0],
-        paramsAtibaia['X2'][0],
-        paramsAtibaia['m2'][0],
+        Atibaia.K[1][0],
+        Atibaia.X[1][0],
+        Atibaia.m[1][0],
         24.0, revCachoeira.D)
 
     # Junto ao ponto de controle, a vazão observada equivale a uma parcela
     # despachada de cada reservatório mais uma parcela incremental de eventos chuvosos
     # menos uma parcela captada entre as barragens e a própria seção.
-    inc1 = [0] * n
-    for j in range(n):
-        inc1[j] = obsAtibaia.Q[j] - (Q1[j] + Q2[j]) + obsAtibaia.C[j]
+    inc1 = pd.DataFrame([0] * n)
+    Q1 = pd.DataFrame(Q1)
+    Q2 = pd.DataFrame(Q2)
+    inc1 = obsAtibaia.Q - (Q1 + Q2) + obsAtibaia.C
 
     # O objeto obsAtibaia é passado ao modelo com 37 dados observados (para que seja possível
     # calcular a nova vazão observada ao final da previsão). Para calibrar o módulo SMAP com
@@ -229,39 +231,39 @@ def Previsao(
 
     # Routings até barragens:
     decisV = UpstreamFORK(
-        paramsValinhos['K'][1],
-        paramsValinhos['X'][1],
-        paramsValinhos['m'][1],
+        Valinhos.K[1],
+        Valinhos.X[1],
+        Valinhos.m[1],
         24.0, calcValinhos
     )
     # Valinhos recebe a contribuição de sua bacia mais a de Atibaia
     decisV = np.add(decisV, calcAtibaia)
     # de Valinhos (pt. 1)
     decisVA = UpstreamFORK(
-        paramsAtibaia['K1'][1],
-        paramsAtibaia['X1'][1],
-        paramsAtibaia['m1'][1],
+        Atibaia.K[0][1],
+        Atibaia.X[0][1],
+        Atibaia.m[0][1],
         24.0, list(np.multiply(decisV, 0.5))
     )
     # de Valinhos (pt. 2)
     decisVC = UpstreamFORK(
-        paramsAtibaia['K2'][1],
-        paramsAtibaia['X2'][1],
-        paramsAtibaia['m2'][1],
+        Atibaia.K[1][1],
+        Atibaia.X[1][1],
+        Atibaia.m[1][1],
         24.0, list(np.multiply(decisV, 0.5))
     )
     # de Atibaia (pt. 1)
     decisAA = UpstreamFORK(
-        paramsAtibaia['K1'][1],
-        paramsAtibaia['X1'][1],
-        paramsAtibaia['m1'][1],
+        Atibaia.K[0][1],
+        Atibaia.X[0][1],
+        Atibaia.m[0][1],
         24.0, list(np.multiply(calcAtibaia, 0.5))
     )
     # de Atibaia (pt. 2)
     decisAC = UpstreamFORK(
-        paramsAtibaia['K2'][1],
-        paramsAtibaia['X2'][1],
-        paramsAtibaia['m2'][1],
+        Atibaia.K[1][1],
+        Atibaia.X[1][1],
+        Atibaia.m[1][1],
         24.0, list(np.multiply(calcAtibaia, 0.5))
     )
 
@@ -318,14 +320,14 @@ def Previsao(
     # Vazões observadas após decisão atual
     # Em Atibaia
     Q1 = DownstreamFORK(
-        paramsAtibaia['K1'][0],
-        paramsAtibaia['X1'][0],
-        paramsAtibaia['m1'][0],
+        Atibaia.K[0][0],
+        Atibaia.X[0][0],
+        Atibaia.m[0][0],
         24.0, revAtibainha.D)
     Q2 = DownstreamFORK(
-        paramsAtibaia['K2'][0],
-        paramsAtibaia['X2'][0],
-        paramsAtibaia['m2'][0],
+        Atibaia.K[1][0],
+        Atibaia.X[1][0],
+        Atibaia.m[1][0],
         24.0, revCachoeira.D)
 
     termoCVA = SMAP(
@@ -339,9 +341,9 @@ def Previsao(
 
     # Em Valinhos
     Q = DownstreamFORK(
-        paramsValinhos['K'][0],
-        paramsValinhos['X'][0],
-        paramsValinhos['m'][0],
+        Valinhos.K[0],
+        Valinhos.X[0],
+        Valinhos.m[0],
         24.0, obsAtibaia.Q)
 
     termoCVV = SMAP(

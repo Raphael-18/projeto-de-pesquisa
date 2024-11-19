@@ -6,10 +6,13 @@ class Bacia:
     inicial Ai será adotada como 2.5 mm para ambas.
     """
 
-    def __init__(self, AD, Capc, kkt):
+    def __init__(self, AD, Capc, kkt, K, X, m):
         self.AD = AD
         self.Capc = Capc
         self.kkt = kkt
+        self.K = K
+        self.X = X
+        self.m = m
     Ai = 2.5
 
 

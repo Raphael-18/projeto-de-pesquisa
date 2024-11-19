@@ -5,7 +5,7 @@ Script com funções objetivo para utilização em otimizações.
 import numpy as np
 
 
-def NSE(obs, calc):
+def NSE(obs, calc) -> float:
     """
     Calculate the Nash-Sutcliffe Efficiency (NSE) coefficient.
     The NSE coefficient is used to assess the predictive power of
@@ -29,7 +29,7 @@ def NSE(obs, calc):
     return a / b
 
 
-def SSQ(obs, calc):
+def SSQ(obs, calc) -> float:
     """
     Calculate the Sum of Squares of Deviations (SSQ) between
     observed and calculated values.
@@ -52,7 +52,7 @@ def SSQ(obs, calc):
     return a
 
 
-def RMSE(obs, calc):
+def RMSE(obs, calc) -> float:
     """
     Calculate the Root Mean Square Error (RMSE) between observed and
     calculated values.
@@ -74,7 +74,7 @@ def RMSE(obs, calc):
     return np.sqrt(a / n)
 
 
-def KGE(obs, calc):
+def KGE(obs, calc) -> float:
     """
     Calculate the Kling-Gupta Efficiency (KGE) between observed
     and calculated data.
