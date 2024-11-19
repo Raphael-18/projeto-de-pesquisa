@@ -1,3 +1,6 @@
+import os
+import joblib
+
 import numpy as np
 import pandas as pd
 from scipy.optimize import differential_evolution
@@ -44,23 +47,23 @@ def Calibracao(
         Str, k2t, Crec, TUin, EBin, Cp = p
 
         # Routing de jusante não linear 1: de Atibainha para Atibaia
-        Q1 = DownstreamFORK(Atibaia.K[0][0], Atibaia.X[0][0], Atibaia.m[0][0], 24.0, revAtibainha.D)
+        Q1 = DownstreamFORK(Atibaia.K[0][0], Atibaia.X[0][0], Atibaia.m[0][0], 24.0, revAtibainha.D.to_numpy())
         # Routing de jusante não linear 2: de Cachoeira para Atibaia
-        Q2 = DownstreamFORK(Atibaia.K[1][0], Atibaia.X[1][0], Atibaia.m[1][0], 24.0, revCachoeira.D)
+        Q2 = DownstreamFORK(Atibaia.K[1][0], Atibaia.X[1][0], Atibaia.m[1][0], 24.0, revCachoeira.D.to_numpy())
 
         # Junto ao ponto de controle, a vazão observada equivale a uma parcela
         # despachada de cada reservatório mais uma parcela incremental de eventos chuvosos
         # menos uma parcela captada entre as barragens e a própria seção e menos uma perda
         # por infiltração entre os pontos.
-        inc1 = pd.DataFrame([0] * n)
-        Q1 = pd.DataFrame(Q1)
-        Q2 = pd.DataFrame(Q2)
-        inc1 = np.array(obsAtibaia.Q - ((1 - Cp) * (Q1 + Q2)) + obsAtibaia.C)
+        inc1 = np.array([0] * n)
+        Q1 = np.array(Q1)
+        Q2 = np.array(Q2)
+        inc1 = obsAtibaia.Q.to_numpy() - ((1 - Cp) * (Q1 + Q2)) + obsAtibaia.C.to_numpy()
 
         # Segundo vetor incremental ("calc")
         inc2 = np.array(SMAP(Str, k2t, Crec, TUin, EBin, obsAtibaia, Atibaia))
 
-        print('Tentando calibrar (Atibaia)...')
+        #print('Tentando calibrar (Atibaia)...')
 
         # Restrição positiva aos routings calculados e às vazões incrementais
         if np.min(Q1) < 0 or np.min(Q2) < 0 or np.min(inc1) < 0 or np.min(inc2) < 0:
@@ -81,8 +84,14 @@ def Calibracao(
                     # KGE: Kling-Gupta
                     return KGE(inc1, inc2)
 
+
     # Busca por evolução diferencial
-    result = differential_evolution(objective, bounds, maxiter=10)
+    try:
+        result = differential_evolution(objective, bounds, maxiter=2, atol=1e-6, tol=1e-6)
+    except Exception as e:
+        print(f'Erro durante a otimização: {e}')
+    
+    #os.system('cls')
     # Resultados
     print('Muskingum de jusante e SMAP')
     print('Atibaia:')
@@ -113,13 +122,13 @@ def Calibracao(
     # 2. Checagem de incrementais e conversão chuva-vazão para o período observado em Atibaia:
     # As incrementais são necessárias para averiguar como as vazões obtidas com os parâmetros calibrados
     # adequam-se aos dados "observados" (também advindos de uma calibração própria, devido à parcela de despacho).
-    newQ1 = DownstreamFORK(Atibaia.K[0][0], Atibaia.X[0][0], Atibaia.m[0][0], 24.0, revAtibainha.D)
-    newQ2 = DownstreamFORK(Atibaia.K[1][0], Atibaia.X[1][0], Atibaia.m[1][0], 24.0, revCachoeira.D)
+    newQ1 = DownstreamFORK(Atibaia.K[0][0], Atibaia.X[0][0], Atibaia.m[0][0], 24.0, revAtibainha.D.to_numpy())
+    newQ2 = DownstreamFORK(Atibaia.K[1][0], Atibaia.X[1][0], Atibaia.m[1][0], 24.0, revCachoeira.D.to_numpy())
 
-    incAtibaia = pd.DataFrame([0] * n)
-    newQ1 = pd.DataFrame(newQ1)
-    newQ2 = pd.DataFrame(newQ2)
-    incAtibaia = obsAtibaia.Q - ((1 - solution[5]) * (newQ1 + newQ2)) + obsAtibaia.C
+    incAtibaia = np.array([0] * n)
+    newQ1 = np.array(newQ1)
+    newQ2 = np.array(newQ2)
+    incAtibaia = obsAtibaia.Q.to_numpy() - ((1 - solution[5]) * (newQ1 + newQ2)) + obsAtibaia.C.to_numpy()
 
     calcAtibaia = SMAP(solution[0], solution[1], solution[2],
                        solution[3], solution[4], obsAtibaia, Atibaia)
@@ -131,37 +140,45 @@ def Calibracao(
         [1000.0, 2000.0], # Str
         [0.2, 6.0], # k2t
         [0.0, 20.0], # Crec
-        [0.0, 1.0], # TUin
+        [0.1, 1.0], # TUin
         [0.1, 40.0], # EBin
-        [0.1, 0.2] # Cp (forçando o modelo a não escolher Cp = 0)
+        [0.1, 0.25] # Cp (forçando o modelo a não escolher Cp = 0)
     ]
 
     # Função objetivo
     def objective(p):
-        # Sujeitos a calibração
-        Str, k2t, Crec, TUin, EBin, Cp = p
+        try:
+            # Sujeitos a calibração
+            Str, k2t, Crec, TUin, EBin, Cp = p
 
-        # Routing de jusante não linear: de Atibaia para Valinhos
-        Q = DownstreamFORK(Valinhos.K[0], Valinhos.X[0], Valinhos.m[0], 24.0, obsAtibaia.Q)
+            # Verificar se os parâmetros estão nos limites esperados
+            if any(np.isnan(p)) or any(np.isinf(p)):
+                print(f"Parâmetros inválidos: {p}")
+                return float('inf')
+        
+            # Routing de jusante não linear: de Atibaia para Valinhos
+            Q = DownstreamFORK(Valinhos.K[0], Valinhos.X[0], Valinhos.m[0], 24.0, obsAtibaia.Q.to_numpy())
 
-        # Junto ao ponto de controle, a vazão observada equivale a uma parcela
-        # despachada de cada reservatório mais uma parcela incremental de eventos chuvosos
-        # menos uma parcela captada entre as barragens e a própria seção e menos uma perda
-        # por infiltração entre os pontos.
-        inc1 = pd.DataFrame([0] * n)
-        Q = pd.DataFrame(Q)
-        inc1 = obsValinhos.Q - ((1 - Cp) * Q) + obsValinhos.C
+            # Junto ao ponto de controle, a vazão observada equivale a uma parcela
+            # despachada de cada reservatório mais uma parcela incremental de eventos chuvosos
+            # menos uma parcela captada entre as barragens e a própria seção e menos uma perda
+            # por infiltração entre os pontos.
+            inc1 = obsValinhos.Q.to_numpy() - ((1 - Cp) * np.array(Q)) + obsValinhos.C.to_numpy()
 
-        # Segundo vetor incremental ("calc")
-        inc2 = SMAP(Str, k2t, Crec, TUin, EBin, obsValinhos, Valinhos)
+            # Segundo vetor incremental ("calc")
+            inc2 = SMAP(Str, k2t, Crec, TUin, EBin, obsValinhos, Valinhos)
 
-        print('Tentando calibrar (Valinhos)...')
+            #print('Tentando calibrar (Valinhos)...')
 
-        # Restrição positiva aos routings calculados e às vazões incrementais
-        minQ, res1, res2 = min(Q), min(inc1), min(inc2)
-        if minQ < 0 or res1 < 0 or res2 < 0:
-            return np.inf
-        else:
+            # Verificar valores intermediários
+            if np.any(np.isnan(inc1)) or np.any(np.isnan(inc2)):
+                print(f"NaN detectado para parâmetros: {p}")
+                return float('inf')
+
+            # Restrição positiva aos routings calculados e às vazões incrementais
+            if np.min(Q) < 0 or np.min(inc1) < 0 or np.min(inc2) < 0:
+                return float('inf')
+            
             # Métrica utilizada para otimização
             match FO:
                 case 1:
@@ -176,9 +193,17 @@ def Calibracao(
                 case 4:
                     # KGE: Kling-Gupta
                     return KGE(inc1, inc2)
-
+        except Exception as e:
+            print(f"Erro com parâmetros {p}: {e}")
+            return float('inf')
+    
     # Busca por evolução diferencial
-    result = differential_evolution(objective, bounds, maxiter=10)
+    try:
+        result = differential_evolution(objective, bounds, maxiter=2, atol=1e-6, tol=1e-6)
+    except Exception as e:
+        print(f'Erro durante a otimização: {e}')
+    
+    #os.system('cls')
     # Resultados
     print()
     print('Valinhos:')
@@ -208,23 +233,23 @@ def Calibracao(
     # 4. Checagem de incrementais e conversão chuva-vazão para o período observado em Valinhos:
     # As incrementais são necessárias para averiguar como as vazões obtidas com os parâmetros calibrados
     # adequam-se aos dados "observados" (também advindos de uma calibração própria, devido à parcela de despacho).
-    newQ = DownstreamFORK(Valinhos.K[0], Valinhos.X[0], Valinhos.m[0], 24.0, obsAtibaia.Q)
+    newQ = DownstreamFORK(Valinhos.K[0], Valinhos.X[0], Valinhos.m[0], 24.0, obsAtibaia.Q.to_numpy())
     
-    incValinhos = pd.DataFrame([0] * n)
-    newQ = pd.DataFrame(newQ)
-    incValinhos = obsValinhos.Q - ((1 - solution[5]) * newQ) + obsValinhos.C
+    incValinhos = np.array([0] * n)
+    newQ = np.array(newQ)
+    incValinhos = obsValinhos.Q.to_numpy() - ((1 - solution[5]) * newQ) + obsValinhos.C.to_numpy()
 
     calcValinhos = SMAP(solution[0], solution[1], solution[2],
                         solution[3], solution[4], obsValinhos, Valinhos)
 
     # 5. Muskingum de montante até o ponto de controle de Atibaia:
-    desp = pd.DataFrame([0] * n)
-    desp = (obsValinhos.Q + obsValinhos.C - incValinhos) / (1 - paramsValinhos['Cp'])
+    desp = np.array([0] * n)
+    desp = (obsValinhos.Q.to_numpy() + obsValinhos.C.to_numpy() - incValinhos) / (1 - paramsValinhos['Cp'])
     # Armazenamento para plotagem
     upVA = UpstreamFORK(Valinhos.K[1], Valinhos.X[1], Valinhos.m[1], 24.0, desp)
 
     # 6. Muskingum de montante até reservatórios:
-    reserv = pd.DataFrame([0] * n)
+    reserv = np.array([0] * n)
     reserv = (obsAtibaia.Q + obsAtibaia.C - incAtibaia) / (1 - paramsAtibaia['Cp'])
 
     alfa = 0.5

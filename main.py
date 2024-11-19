@@ -63,7 +63,7 @@ def normalize_point(df) -> pd.DataFrame:
     df[['Q']] = df[['Q']].fillna(df[['Q']].mean())
     df['t'] = pd.to_datetime(df['t'], format='%Y-%m-%d')
 
-    df_slice = df.head(732) # Primeiros 2 anos da calibração
+    df_slice = df.head(2192) # .iloc[1462:2193][:] # 6 anos da calibração
 
     return df_slice
 
@@ -79,7 +79,7 @@ def normalize_reservoir(df) -> pd.DataFrame:
     df['D'] = df['D'].replace(0, 0.25)
     df['t'] = pd.to_datetime(df['t'], format='%Y-%m-%d')
 
-    df_slice = df.head(732) # Primeiros 2 anos da calibração
+    df_slice = df.head(2192) # iloc[1462:2193][:] # 6 anos da calibração
 
     return df_slice
 
@@ -103,6 +103,8 @@ revAtibainha = pd.read_csv('Dados/CSVs/Descargas_A.csv', sep=';')
 revCachoeira = pd.read_csv('Dados/CSVs/Descargas_C.csv', sep=';')
 revAtibainha = normalize_reservoir(revAtibainha)
 revCachoeira = normalize_reservoir(revCachoeira)
+
+count = 0
 
 paramsAtibaia, paramsValinhos, resultados = Calibracao(
     obsAtibaia, obsValinhos,
