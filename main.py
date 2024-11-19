@@ -53,6 +53,8 @@ def normalize_point(df) -> pd.DataFrame:
                'Captacao': 'C',
                'Evapotranspiracao': 'E'}
     df = df.rename(columns=columns)
+    df[['P']] = df[['P']].fillna(0)
+    df[['Q']] = df[['Q']].fillna(df[['Q']].mean())  # testar
     df['t'] = pd.to_datetime(df['t'], format='%Y-%m-%d')
 
     return df
