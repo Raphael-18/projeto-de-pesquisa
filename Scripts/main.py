@@ -1,6 +1,8 @@
 import sys
 import os
 
+import joblib
+
 # Adiciona o diretório pai (o diretório acima de 'Scripts' e 'Dados') ao sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -51,10 +53,17 @@ match flag:
 # Pontos de controle
 obsAtibaia  = DBConnection('root', 'JH_Article', 'Atibaia' , 'Calibracao')
 obsValinhos = DBConnection('root', 'JH_Article', 'Valinhos', 'Calibracao')
+
+joblib.dump(obsAtibaia, 'obsAtibaia.pkl')
+joblib.dump(obsAtibaia, 'obsValinhos.pkl')
+
 # Reservatórios
 revAtibainha = DBConnection('root', 'JH_Article', 'Atibainha', 'Calibracao')
 revCachoeira = DBConnection('root', 'JH_Article', 'Cachoeira', 'Calibracao')
 
+joblib.dump(obsAtibaia, 'revAtibainha.pkl')
+joblib.dump(obsAtibaia, 'revCachoeira.pkl')
+"""
 paramsAtibaia, paramsValinhos, resultados = Calibracao(
     obsAtibaia  , obsValinhos ,
     revAtibainha, revCachoeira,
@@ -63,7 +72,29 @@ paramsAtibaia, paramsValinhos, resultados = Calibracao(
 )
 resultados.to_excel('C:/Users/rfp19/OneDrive/Documentos/GitHub/jh_article/projeto-de-pesquisa/Scripts/Resultados/Calibracao.xlsx')
 print(resultados)
+"""
+paramsAtibaia = {
+    'Str' : 1303.999,
+    'k2t' :    3.720,
+    'Crec':    0.235,
+    'K1'  : [75.445, 123.071],
+    'X1'  : [ 0.254,   0.400],
+    'm1'  : [ 1.206,   1.144],
+    'K2'  : [74.383, 127.039],
+    'X2'  : [ 0.226,   0.400],
+    'm2'  : [ 1.240,   1.144]
+}
 
+paramsValinhos = {
+    'Str' : 1107.297,
+    'k2t' :    5.611,
+    'Crec':    0.105,
+    'K'  : [104.408, 99.000],
+    'X'  : [  0.200,  0.281],
+    'm'  : [  1.100,  1.200]
+}
+
+#"""
 ######################################################################
 # ETAPA 3:
 # Loop para executar o modelo, fazendo slices em vetores de calibração,
@@ -71,7 +102,7 @@ print(resultados)
 # de previsão de chuva de 7 dias
 
 # Dias a serem simulados
-n = 677 # 31
+n = 1356 # 31
 # Respostas
 despachos    = {'Atibainha': [], 'Cachoeira': []}
 atendimentos = {'Atibaia'  : [], 'Valinhos' : []}
@@ -189,7 +220,7 @@ print('Volumes:\n'
       'Calculado em Cachoeira: %.3f hm3\n'
       'Real em Cachoeira: %.3f hm3\n'
       % (volAtibainha, vrealAtibainha, volCachoeira, vrealCachoeira))
-
+#"""
 # Fim de cronometragem
 end = timer()
 print('Tempo de execução: %.3f s' % (end - start))

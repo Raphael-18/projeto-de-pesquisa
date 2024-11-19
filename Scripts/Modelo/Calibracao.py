@@ -1,5 +1,3 @@
-import logging
-
 from Metodos.Muskingum.Downstream import *
 from Metodos.Muskingum.Upstream   import *
 from Metodos.SMAP        import *
@@ -7,16 +5,6 @@ from Metodos.Otimizacoes import *
 from scipy.optimize      import differential_evolution
 import numpy  as np
 import pandas as pd
-
-# Set up basic configuration
-logging.basicConfig(
-    level=logging.DEBUG,  # Set the default logging level
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",  # Log format
-    handlers=[
-        logging.FileHandler("app.log"),  # Log to a file
-        logging.StreamHandler()  # Also log to console
-    ]
-)
 
 def Calibracao(
         obsAtibaia  , obsValinhos ,        # Captações, chuvas, vazões e evapotranspirações observadas nos pontos
@@ -42,10 +30,10 @@ def Calibracao(
         [   0.0,    1.0],       # Crec
         [   0.0,    1.0],       # TUin
         [   0.1,    9.2],       # EBin
-        [  60.0,  120.0],       # K1 (entre 2.5 e 5 dias)
+        [  80.0,  120.0],       # K1 (entre 2.5 e 5 dias)
         [   0.2,    0.5],       # X1
         [   1.1,    1.3],       # m1 (forçando o modelo a não escolher m = 1)
-        [  60.0,  120.0],       # K2 (entre 2.5 e 5 dias)
+        [  80.0,  120.0],       # K2 (entre 2.5 e 5 dias)
         [   0.2,    0.5],       # X2
         [   1.1,    1.3],       # m2 (forçando o modelo a não escolher m  = 1)
         [   0.1,    0.2]        # Cp (forçando o modelo a não escolher Cp = 0)
@@ -53,57 +41,68 @@ def Calibracao(
 
     n = len(obsAtibaia.Q)
 
+    # Configure numpy para gerar um erro quando NaN ou inf forem encontrados
+    np.seterr(invalid='raise')
     # Função objetivo
     def objective(p):
-        # Sujeitos a calibração
-        Str, k2t, Crec, TUin, EBin, K1, X1, m1, K2, X2, m2, Cp = p
+        try:
+            # Sujeitos a calibração
+            Str, k2t, Crec, TUin, EBin, K1, X1, m1, K2, X2, m2, Cp = p
 
-        # Routing de jusante não linear 1: de Atibainha para Atibaia
-        Q1 = DownstreamFORK(K1, X1, m1, 24.0, revAtibainha.D)
-        # Routing de jusante não linear 2: de Cachoeira para Atibaia
-        Q2 = DownstreamFORK(K2, X2, m2, 24.0, revCachoeira.D)
+            # Routing de jusante não linear 1: de Atibainha para Atibaia
+            Q1 = DownstreamFORK(K1, X1, m1, 24.0, revAtibainha.D)
+            # Routing de jusante não linear 2: de Cachoeira para Atibaia
+            Q2 = DownstreamFORK(K2, X2, m2, 24.0, revCachoeira.D)
 
-        # Junto ao ponto de controle, a vazão observada equivale a uma parcela
-        # despachada de cada reservatório mais uma parcela incremental de eventos chuvosos
-        # menos uma parcela captada entre as barragens e a própria seção e menos uma perda
-        # por infiltração entre os pontos.
-        inc1 = [0] * n
-        for j in range(n):
-            try:
-                inc1[j] = obsAtibaia.Q[j] - ((1 - Cp) * (Q1[j] + Q2[j])) + obsAtibaia.C[j]
-            except:
-                pass
+            # Junto ao ponto de controle, a vazão observada equivale a uma parcela
+            # despachada de cada reservatório mais uma parcela incremental de eventos chuvosos
+            # menos uma parcela captada entre as barragens e a própria seção e menos uma perda
+            # por infiltração entre os pontos.
+            inc1 = [0] * n
+            for j in range(n):
+                try:
+                    inc1[j] = obsAtibaia.Q[j] - ((1 - Cp) * (Q1[j] + Q2[j])) + obsAtibaia.C[j]
+                except:
+                    pass
 
-        # Segundo vetor incremental ("calc")
-        inc2 = SMAP(Str, k2t, Crec, TUin, EBin, obsAtibaia, Atibaia)
+            # Segundo vetor incremental ("calc")
+            inc2 = SMAP(Str, k2t, Crec, TUin, EBin, obsAtibaia, Atibaia)
 
-        print('Tentando calibrar...')
+            print('Tentando calibrar (Atibaia)...')
 
-        # Restrição positiva aos routings calculados e às vazões incrementais
-        minQ1, minQ2 = min(Q1), min(Q2)
-        res1 , res2  = min(inc1), min(inc2)
-        if minQ1 < 0 or minQ2 < 0 or res1 < 0 or res2 < 0:
-            return np.inf
-        else:
-            # Métrica utilizada para otimização
-            match FO:
-                case 1:
-                    # NSE: Nash-Sutcliffe
-                    return NSE(inc1, inc2)
-                case 2:
-                    # SSQ: Sum of Squares of Deviations
-                    return SSQ(inc1, inc2)
-                case 3:
-                    # RMSE: Root-Mean-Square Error
-                    return RMSE(inc1, inc2)
-                case 4:
-                    # KGE: Kling-Gupta
-                    return KGE(inc1, inc2)
+            # Restrição positiva aos routings calculados e às vazões incrementais
+            minQ1, minQ2 = min(Q1), min(Q2)
+            res1 , res2  = min(inc1), min(inc2)
+            if minQ1 < 0 or minQ2 < 0 or res1 < 0 or res2 < 0:
+                return np.inf
+            else:
+                # Métrica utilizada para otimização
+                match FO:
+                    case 1:
+                        # NSE: Nash-Sutcliffe
+                        if np.isnan(NSE(inc1, inc2) or np.isinf(NSE(inc1, inc2))):
+                            return 1e10
+                        return NSE(inc1, inc2)
+                    case 2:
+                        # SSQ: Sum of Squares of Deviations
+                        if np.isnan(SSQ(inc1, inc2) or np.isinf(SSQ(inc1, inc2))):
+                            return 1e10
+                        return SSQ(inc1, inc2)
+                    case 3:
+                        # RMSE: Root-Mean-Square Error
+                        if np.isnan(RMSE(inc1, inc2) or np.isinf(RMSE(inc1, inc2))):
+                            return 1e10
+                        return RMSE(inc1, inc2)
+                    case 4:
+                        # KGE: Kling-Gupta
+                        if np.isnan(KGE(inc1, inc2) or np.isinf(KGE(inc1, inc2))):
+                            return 1e10
+                        return KGE(inc1, inc2)
+        except:
+            return 1e10
 
     # Busca por evolução diferencial
     result = differential_evolution(objective, bounds, maxiter=1)
-
-    logging.debug("Calibração concluída!")
 
     # Resultados
     print('Muskingum de jusante e SMAP')
@@ -185,7 +184,7 @@ def Calibracao(
         # Segundo vetor incremental ("calc")
         inc2 = SMAP(Str, k2t, Crec, TUin, EBin, obsValinhos, Valinhos)
 
-        print('Tentando calibrar...')
+        print('Tentando calibrar (Valinhos)...')
 
         # Restrição positiva aos routings calculados e às vazões incrementais
         minQ, res1, res2 = min(Q), min(inc1), min(inc2)

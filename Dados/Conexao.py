@@ -33,7 +33,7 @@ def DBConnection(user, database, secao, tipo):
         # Query de calibração retorna captações, chuvas, vazões, evapotranspirações ou
         # despachos (reservatórios) entre 01/01/2015 e 25/10/2020
         if tipo == 'Calibracao':
-            query = "SELECT * FROM " + secao + " WHERE ID BETWEEN 1 AND 2125"
+            query = "SELECT * FROM " + secao + " WHERE ID BETWEEN 2164 AND 3586" # 1 AND 732 ou 733 AND 1462 ou 1463 AND 2193
             cursor.execute(query)
 
             # Pontos de controle
@@ -72,7 +72,7 @@ def DBConnection(user, database, secao, tipo):
         # Query de previsão retorna dados de chuva previstos em uma janela de sete dias
         # de 25/10/2020 a 25/10/2024
         else:
-            query = "SELECT * FROM " + tipo + " WHERE ID BETWEEN 818 AND 2279"
+            query = "SELECT * FROM " + tipo + " WHERE ID BETWEEN 887 AND 2279"
             cursor.execute(query)
             # Vetores para armazenar dados lidos
             t  = []
