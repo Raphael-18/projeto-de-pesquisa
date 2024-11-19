@@ -58,10 +58,13 @@ def Calibracao(
         # despachada de cada reservatório mais uma parcela incremental de eventos chuvosos
         # menos uma parcela captada entre as barragens e a própria seção e menos uma perda
         # por infiltração entre os pontos.
-        inc1 = [0] * n
-        for j in range(n):
-            inc1[j] = obsAtibaia.Q[j] - \
-                ((1 - Cp) * (Q1[j] + Q2[j])) + obsAtibaia.C[j]
+        inc1 = pd.DataFrame([0] * n)
+        Q1 = pd.DataFrame(Q1)
+        Q2 = pd.DataFrame(Q2)
+        inc1 = obsAtibaia.Q - ((1 - Cp) * (Q1 + Q2)) + obsAtibaia.C
+        # for j in range(n):
+        #     inc1[j] = obsAtibaia.Q[j] - \
+        #         ((1 - Cp) * (Q1[j] + Q2[j])) + obsAtibaia.C[j]
 
         # Segundo vetor incremental ("calc")
         inc2 = SMAP(Str, k2t, Crec, TUin, EBin, obsAtibaia, Atibaia)
