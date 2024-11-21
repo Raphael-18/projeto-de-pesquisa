@@ -1,14 +1,25 @@
 import os
 import configparser
+import logging
 
 import numpy as np
 import pandas as pd
 from timeit import default_timer as timer
 from tqdm import tqdm
 
-from Dados.Classes import Bacia, Ponto
+from Dados.Classes import Bacia, Ponto, PrevisaoClass, Reservatorio
 from Scripts.Modelo.Calibracao import Calibracao
 from Scripts.Modelo.Previsao import Previsao
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+logger.addHandler(logging.StreamHandler())
+file_handler = logging.FileHandler('previsao.log')
+file_handler.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+file_handler.setFormatter(formatter)
+logger.addHandler(file_handler)
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -17,20 +28,20 @@ start = timer()
 
 # region Inicialização de variáveis de interesse
 Atibaia = Bacia(
-    AD = 477,
-    Capc = 0.5,
-    kkt = 60.0,
+    AD   = 477,
+    Capc =   0.5,
+    kkt  =  60.0,
     K = [[75.445, 123.071], [74.383, 127.039]],
-    X = [[0.254, 0.400], [0.226, 0.400]],
-    m = [[1.206, 1.144], [1.240, 1.144]]
+    X = [[ 0.254,   0.400], [ 0.226,   0.400]],
+    m = [[ 1.206,   1.144], [ 1.240,   1.144]]
 )
 Valinhos = Bacia(
-    AD = 1074,
-    Capc = 0.5,
-    kkt = 60.0,
+    AD   = 1074,
+    Capc =    0.5,
+    kkt  =   60.0,
     K = [104.408, 99.000],
-    X = [0.200, 0.281],
-    m = [1.100, 1.200]
+    X = [  0.200,  0.281],
+    m = [  1.100,  1.200]
 )
 
 FO = int(config['ObjectiveFunction']['FO'])
@@ -48,7 +59,7 @@ simulacao = simulacao_dict.get(flag, 'Unknown')
 # region Calibração de variáveis hidrológicas e de routing
 # Pontos de controle
 
-def normalize_point(df) -> pd.DataFrame:
+def normalize_point(df): # -> pd.DataFrame():
     """
     Função auxiliar para substituir classe
     DBConnection por pandas.DataFrame.
@@ -63,12 +74,22 @@ def normalize_point(df) -> pd.DataFrame:
     df[['Q']] = df[['Q']].fillna(df[['Q']].mean())
     df['t'] = pd.to_datetime(df['t'], format='%Y-%m-%d')
 
-    df_slice = df.head(2192) # .iloc[1462:2193][:] # 6 anos da calibração
+    df_slice = df.iloc[2163:][:] # head(2192) # 6 anos da calibração
 
-    return df_slice
+    # return df_slice
+
+    objeto = Ponto(
+        C = df_slice['C'].to_list(),
+        E = df_slice['E'].to_list(),
+        P = df_slice['P'].to_list(),
+        Q = df_slice['Q'].to_list(),
+        t = df_slice['t'].to_list()
+    )
+
+    return objeto
 
 
-def normalize_reservoir(df) -> pd.DataFrame:
+def normalize_reservoir(df): # -> pd.DataFrame():
     """
     Função auxiliar para substituir classe
     DBConnection por pandas.DataFrame.
@@ -79,33 +100,40 @@ def normalize_reservoir(df) -> pd.DataFrame:
     df['D'] = df['D'].replace(0, 0.25)
     df['t'] = pd.to_datetime(df['t'], format='%Y-%m-%d')
 
-    df_slice = df.head(2192) # iloc[1462:2193][:] # 6 anos da calibração
+    df_slice = df.iloc[2163:][:] # head(2192) # 6 anos da calibração
 
-    return df_slice
+    # return df_slice
+
+    objeto = Reservatorio(
+        D = df_slice['D'].to_list(),
+        t = df_slice['t'].to_list()
+    )
+
+    return objeto
 
 
 def normalize_forecast(path):
     df = pd.read_csv(path, sep=';')
     df['Dia'] = pd.to_datetime(df['Dia'], format='%Y-%m-%d')
 
-    matrix = [df[col].tolist() for col in df.columns]
+    df_slice = df#.iloc[886:][:]
 
-    previsao = Previsao(amostras=matrix)
+    matrix = [df_slice[col].tolist() for col in df_slice.columns]
+
+    previsao = PrevisaoClass(amostras=matrix)
     return previsao
 
 
-obsAtibaia = pd.read_csv('Dados/CSVs/ChuvasEVazoes_A.csv', sep=';')
+obsAtibaia  = pd.read_csv('Dados/CSVs/ChuvasEVazoes_A.csv', sep=';')
 obsValinhos = pd.read_csv('Dados/CSVs/ChuvasEVazoes_V.csv', sep=';')
-obsAtibaia = normalize_point(obsAtibaia)
+obsAtibaia  = normalize_point(obsAtibaia)
 obsValinhos = normalize_point(obsValinhos)
 # Reservatórios
 revAtibainha = pd.read_csv('Dados/CSVs/Descargas_A.csv', sep=';')
 revCachoeira = pd.read_csv('Dados/CSVs/Descargas_C.csv', sep=';')
 revAtibainha = normalize_reservoir(revAtibainha)
 revCachoeira = normalize_reservoir(revCachoeira)
-
-count = 0
-
+"""
 paramsAtibaia, paramsValinhos, resultados = Calibracao(
     obsAtibaia, obsValinhos,
     revAtibainha, revCachoeira,
@@ -124,11 +152,24 @@ print(resultados)
 # para caminhar de 30 em 30 dias e escolhendo a cada iteração valores
 # de previsão de chuva de 7 dias
 
+# Parâmetros SMAP calibrados durante rodada de 6 anos
+paramsAtibaia = {
+    'Str' : 1323.256, # 1303.999,
+    'k2t' :    3.500, # 3.720,
+    'Crec':    0.246  # 0.235
+}
+
+paramsValinhos = {
+    'Str' : 1619.303, # 1107.297,
+    'k2t' :    4.912, # 5.611,
+    'Crec':    0.220  # 0.105
+}
+
 # Dias a serem simulados
 n = int(config['Simulation']['simulation_days'])
 # Respostas
-despachos = {'Atibainha': [], 'Cachoeira': []}
-atendimentos = {'Atibaia': [], 'Valinhos': []}
+despachos    = {'Atibainha': [], 'Cachoeira': []}
+atendimentos = {'Atibaia'  : [], 'Valinhos' : []}
 # Dicionários para armazenamento de parâmetros após calibração
 startA = {'TUin': [], 'EBin': []}
 startV = {'TUin': [], 'EBin': []}
@@ -136,13 +177,13 @@ startV = {'TUin': [], 'EBin': []}
 # Loop para invocar o modelo e extrair uma decisão de cada dia
 for j in tqdm(range(n), desc="Previsão"):
     # Necessário conectar ao banco de dados a cada iteração para que
-    # ao fazer os slices não haja p'erda de informação (recorte em
+    # ao fazer os slices não haja perda de informação (recorte em
     # vetores modificados e não em vetores originais)
     i = j  # + 29
     # 3.1. OBSERVAÇÃO
     # Pontos de controle (dados observados)
-    dadosAtibaia = obsAtibaia.copy()
-    dadosValinhos = obsValinhos.copy()
+    dadosAtibaia  = normalize_point(pd.read_csv('Dados/CSVs/ChuvasEVazoes_A.csv', sep=';'))
+    dadosValinhos = normalize_point(pd.read_csv('Dados/CSVs/ChuvasEVazoes_V.csv', sep=';'))
     # Assinatura nos objetos a serem passados ao método de previsão
     obsAtibaia.C = dadosAtibaia.C
     obsAtibaia.E = dadosAtibaia.E
@@ -160,7 +201,7 @@ for j in tqdm(range(n), desc="Previsão"):
 
     if j == 0:
         # Slices nos pontos
-        obsAtibaia.Q = obsAtibaia.Q[i:i + 30]
+        obsAtibaia.Q  = obsAtibaia.Q[i:i + 30]
         obsValinhos.Q = obsValinhos.Q[i:i + 30]
         # Slices nos reservatorios
         revAtibainha.D = revAtibainha.D[i:i + 30]
@@ -168,7 +209,7 @@ for j in tqdm(range(n), desc="Previsão"):
 
     # 3.2. PREVISÃO
     # Atibaia
-    previsaoA = normalize_forecast('Dados/CSVs/SIMEPAR_Atibaia.csv')
+    previsaoA = normalize_forecast('Dados/CSVs/Prev_Atibaia_Sim_Completo.csv')
 
     # Slices nas previsões
     previsaoA.amostras[1] = previsaoA.amostras[1][i + 30]
@@ -183,7 +224,7 @@ for j in tqdm(range(n), desc="Previsão"):
     for k in range(7):
         prevAtibaia.P.append(previsaoA.amostras[k + 1])
     # Valinhos
-    previsaoV = normalize_forecast('Dados/CSVs/SIMEPAR_Valinhos.csv')
+    previsaoV = normalize_forecast('Dados/CSVs/Prev_Valinhos_Sim_Completo.csv')
     # Slices nas previsões
     previsaoV.amostras[1] = previsaoV.amostras[1][i + 30]
     previsaoV.amostras[2] = previsaoV.amostras[2][i + 30]
@@ -199,19 +240,19 @@ for j in tqdm(range(n), desc="Previsão"):
 
     # 3.3 INVOCAÇÃO DO MODELO
     checkAtibaia, checkValinhos, resultado = Previsao(
-        obsAtibaia, obsValinhos,
-        prevAtibaia, prevValinhos,
+        obsAtibaia   , obsValinhos   ,
+        prevAtibaia  , prevValinhos  ,
         paramsAtibaia, paramsValinhos,
-        revAtibainha, revCachoeira,
-        startA, startV,
+        revAtibainha , revCachoeira  ,
+        startA , startV  ,
         Atibaia, Valinhos,
-        FO=FO, step=j + 1
+        FO=FO  , step=j + 1
     )
 
     despachos['Atibainha'] += [resultado.Atibainha]
     despachos['Cachoeira'] += [resultado.Cachoeira]
 
-    atendimentos['Atibaia'] += [checkAtibaia]
+    atendimentos['Atibaia']  += [checkAtibaia]
     atendimentos['Valinhos'] += [checkValinhos]
 
 pd.DataFrame(data=despachos).to_excel(
@@ -225,17 +266,17 @@ print('\nAtendimentos')
 print(pd.DataFrame(data=atendimentos))
 
 # Volumes descarregados
-unit_factor = 86400 / 1_000_000.0
-volAtibainha = np.trapz(despachos['Atibainha'], dx=1) * unit_factor
-volCachoeira = np.trapz(despachos['Cachoeira'], dx=1) * unit_factor
+unit_factor  = 86400 / 1_000_000.0
+volAtibainha = np.trapezoid(despachos['Atibainha'], dx=1) * unit_factor
+volCachoeira = np.trapezoid(despachos['Cachoeira'], dx=1) * unit_factor
 # Despachos reais
 despAtibainha = normalize_reservoir(pd.read_csv('Dados/CSVs/Descargas_A.csv', sep=';'))
 despCachoeira = normalize_reservoir(pd.read_csv('Dados/CSVs/Descargas_C.csv', sep=';'))
 
-despAtibainha.D = despAtibainha.D[2194:3587]
-despCachoeira.D = despCachoeira.D[2194:3587]
-vrealAtibainha = np.trapz(despAtibainha.D, dx=1) * unit_factor
-vrealCachoeira = np.trapz(despCachoeira.D, dx=1) * unit_factor
+despAtibainha.D = despAtibainha.D[30:]
+despCachoeira.D = despCachoeira.D[30:]
+vrealAtibainha  = np.trapezoid(despAtibainha.D, dx=1) * unit_factor
+vrealCachoeira  = np.trapezoid(despCachoeira.D, dx=1) * unit_factor
 
 print(
     '\n'
@@ -245,7 +286,7 @@ print(
     f'Calculado em Cachoeira: {volCachoeira:.3f} hm3\n'
     f'Real em Cachoeira: {vrealCachoeira:.3f} hm3\n'
 )
-"""
+
 end = timer()
 print(f'Tempo de execução: {end - start:.3f} s')
 

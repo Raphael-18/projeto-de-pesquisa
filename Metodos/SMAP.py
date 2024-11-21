@@ -45,16 +45,16 @@ def SMAP(Str, k2t, Crec, TUin, EBin, Ponto, Bacia):
         TU = RSolo / Str
 
         # Escoamento direto
-        if Ponto.P.to_numpy()[i] > Ai:
-            ES = ((Ponto.P.to_numpy()[i] - Ai) ** 2) / (Ponto.P.to_numpy()[i] - Ai + Str - RSolo)
+        if Ponto.P[i] > Ai:
+            ES = ((Ponto.P[i] - Ai) ** 2) / (Ponto.P[i] - Ai + Str - RSolo)
         else:
             ES = 0.0
 
         # Evapotranspiração real
-        if (Ponto.P.to_numpy()[i] - ES) > Ponto.E.to_numpy()[i]:
-            ER = Ponto.E.to_numpy()[i]
+        if (Ponto.P[i] - ES) > Ponto.E[i]:
+            ER = Ponto.E[i]
         else:
-            ER = Ponto.P.to_numpy()[i] - ES + ((Ponto.E.to_numpy()[i] - Ponto.P.to_numpy()[i] + ES) * TU)
+            ER = Ponto.P[i] - ES + ((Ponto.E[i] - Ponto.P[i] + ES) * TU)
 
         # Recarga
         if RSolo > (Capc * Str):
@@ -63,7 +63,7 @@ def SMAP(Str, k2t, Crec, TUin, EBin, Ponto, Bacia):
             Rec = 0.0
 
         # Atualiza reservatório-solo
-        RSolo += Ponto.P.to_numpy()[i] - ES - ER - Rec
+        RSolo += Ponto.P[i] - ES - ER - Rec
 
         if RSolo > Str:
             ES += RSolo - Str

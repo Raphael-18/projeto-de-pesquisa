@@ -24,8 +24,8 @@ def Previsao(
     # 1. Translado de vazões observadas em Atibaia para calibrar TUin e EBin
     # e invocar o modelo SMAP para previsão em Valinhos
     bounds = [
-        [0.0,  1.0],  # TUin
-        [0.1, 40.0]  # EBin
+        [0.1,  0.7],  # TUin
+        [0.1,  7.4]   # EBin (vazão mínima do período 02/01/21 - 25/10/24)
     ]
 
     n = len(obsAtibaia.Q)
@@ -40,9 +40,9 @@ def Previsao(
     # Junto ao ponto de controle, a vazão observada equivale a uma parcela
     # despachada de cada reservatório mais uma parcela incremental de eventos chuvosos
     # menos uma parcela captada entre as barragens e a própria seção.
-    inc1 = pd.DataFrame([0] * n)
-    Q = pd.DataFrame(Q)
-    inc1 = obsValinhos.Q - Q + obsValinhos.C
+    inc1 = [0] * n
+    for j in range(n):
+        inc1[j] = obsValinhos.Q[j] - Q[j] + obsValinhos.C[j]
 
     # O objeto obsValinhos é passado ao modelo com 37 dados observados (para que seja possível
     # calcular a nova vazão observada ao final de cada previsão). Para calibrar o módulo SMAP com
@@ -85,24 +85,9 @@ def Previsao(
                     return KGE(inc1, inc2)
 
     # Busca por evolução diferencial
-    result = differential_evolution(objective, bounds, maxiter=10)
-    # Resultados
-    # print()
-    # print('Step: %d' % step)
-    # print('SMAP em Valinhos:')
-    # print('Status: %s' % result['message'])
-    # print('Avaliações realizadas: %d' % result['nfev'])
-    # Solução
+    result = differential_evolution(objective, bounds, maxiter=2)
+
     solution = result['x']
-    # evaluation = objective(solution)
-    # print('Solução: \n'
-    #      'f = ( \n'
-    #      '\t[TUin = %.3f \n\t EBin = %.3f]'
-    #      % (solution[0], solution[1]))
-    # if FO == 1 or FO == 4:
-    #    print(') = %.3f' % (1 - evaluation))
-    # else:
-    #    print(') = %.3f' % evaluation)
 
     startValinhos['TUin'] += [solution[0]]
     startValinhos['EBin'] += [solution[1]]
@@ -120,8 +105,8 @@ def Previsao(
     # 3. Translado de despachos observadas em Atibainha e Cachoeira para calibrar TUin e EBin
     # e invocar o modelo SMAP para previsão em Atibaia
     bounds = [
-        [0.0, 1.0],             # TUin
-        [0.1, 9.2]              # EBin
+        [0.0, 0.7],   # TUin
+        [0.1, 4.5]    # EBin (vazão mínima do período 02/01/21 - 25/10/24)
     ]
 
     # Routing de jusante não linear de Atibainha para Atibaia (#1) e de Cachoeira para Atibaia (#2)
@@ -139,10 +124,9 @@ def Previsao(
     # Junto ao ponto de controle, a vazão observada equivale a uma parcela
     # despachada de cada reservatório mais uma parcela incremental de eventos chuvosos
     # menos uma parcela captada entre as barragens e a própria seção.
-    inc1 = pd.DataFrame([0] * n)
-    Q1 = pd.DataFrame(Q1)
-    Q2 = pd.DataFrame(Q2)
-    inc1 = obsAtibaia.Q - (Q1 + Q2) + obsAtibaia.C
+    inc1 = [0] * n
+    for j in range(n):
+        inc1[j] = obsAtibaia.Q[j] - (Q1[j] + Q2[j]) + obsAtibaia.C[j]
 
     # O objeto obsAtibaia é passado ao modelo com 37 dados observados (para que seja possível
     # calcular a nova vazão observada ao final da previsão). Para calibrar o módulo SMAP com
@@ -186,22 +170,8 @@ def Previsao(
 
     # Busca por evolução diferencial
     result = differential_evolution(objective, bounds, maxiter=10)
-    # Resultados
-    # print()
-    # print('SMAP em Atibaia:')
-    # print('Status: %s' % result['message'])
-    # print('Avaliações realizadas: %d' % result['nfev'])
-    # Solução
+
     solution = result['x']
-    # evaluation = objective(solution)
-    # print('Solução: \n'
-    #      'f = ( \n'
-    #      '\t[TUin = %.3f \n\t EBin = %.3f]'
-    #      % (solution[0], solution[1]))
-    # if FO == 1 or FO == 4:
-    #    print(') = %.3f' % (1 - evaluation))
-    # else:
-    #    print(') = %.3f' % evaluation)
 
     startAtibaia['TUin'] += [solution[0]]
     startAtibaia['EBin'] += [solution[1]]

@@ -53,10 +53,17 @@ class Reservatorio:
         self.t = t
 
 
-class Previsao:
+class PrevisaoClass:
     """
     Classe necessária para resgatar matrizes de previsão meteorológica.
     """
 
     def __init__(self, amostras):
         self.amostras = amostras
+
+    def __str__(self):
+        texto = ''
+        for amostra in self.amostras:
+            texto += str(amostra)
+            texto += '\n'
+        return texto

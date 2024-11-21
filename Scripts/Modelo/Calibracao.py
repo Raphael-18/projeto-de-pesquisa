@@ -36,7 +36,7 @@ def Calibracao(
         [0.0, 1.0], # Crec
         [0.0, 1.0], # TUin
         [0.1, 9.2], # EBin
-        [0.1, 0.2] # Cp (forçando o modelo a não escolher Cp = 0)
+        [0.1, 0.2]  # Cp (forçando o modelo a não escolher Cp = 0)
     ]
 
     n = len(obsAtibaia.Q)
@@ -113,10 +113,10 @@ def Calibracao(
     # Armazenamento em dicionário para utilização durante etapa de previsão
     # (K, X e m com final 1 referem-se a Atibainha; aqueles com final 2 são de Cachoeira)
     paramsAtibaia = {
-        'Str': solution[0],
-        'k2t': solution[1],
+        'Str' : solution[0],
+        'k2t' : solution[1],
         'Crec': solution[2],
-        'Cp': solution[5]
+        'Cp'  : solution[5]
     }
 
     # 2. Checagem de incrementais e conversão chuva-vazão para o período observado em Atibaia:
@@ -138,11 +138,11 @@ def Calibracao(
     # Condições de contorno para variáveis que serão calibradas:
     bounds = [
         [1000.0, 2000.0], # Str
-        [0.2, 6.0], # k2t
+        [0.2,  6.0], # k2t
         [0.0, 20.0], # Crec
-        [0.1, 1.0], # TUin
+        [0.1,  1.0], # TUin
         [0.1, 40.0], # EBin
-        [0.1, 0.25] # Cp (forçando o modelo a não escolher Cp = 0)
+        [0.1, 0.25]  # Cp (forçando o modelo a não escolher Cp = 0)
     ]
 
     # Função objetivo
@@ -224,10 +224,10 @@ def Calibracao(
 
     # Armazenamento em dicionário para utilização durante etapa de previsão
     paramsValinhos = {
-        'Str': solution[0],
-        'k2t': solution[1],
+        'Str' : solution[0],
+        'k2t' : solution[1],
         'Crec': solution[2],
-        'Cp': solution[5]
+        'Cp'  : solution[5]
     }
 
     # 4. Checagem de incrementais e conversão chuva-vazão para o período observado em Valinhos:
